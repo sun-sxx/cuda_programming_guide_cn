@@ -1,9 +1,9 @@
-.. _sec:memory-sync-domains:
+.. _memory-sync-domains:
 
 内存同步域
 ====================
 
-.. _sec:memory-fence-interference:
+.. _memory-fence-interference:
 
 内存栅栏干扰
 ---------------------------
@@ -36,7 +36,7 @@
 
 一个常见的例子是当一个内核在本地 GPU 内存中执行计算，而一个并行内核（例如来自 NCCL）正在与对等节点进行通信时。完成时，本地内核将隐式刷新其写入，以满足与下游工作的任何 \*同步关系\*。这可能会不必要地等待通信内核发出的较慢的 NVLink 或 PCIe 写入，无论是完全等待还是部分等待。
 
-.. _sec:isolating-traffic-with-domains:
+.. _isolating-traffic-with-domains:
 
 使用域隔离流量
 -----------------------------
@@ -47,7 +47,7 @@
 
 请注意，这修改了 ``thread_scope_device`` 的定义。然而，由于内核将默认使用下面描述的域 0，因此保持了向后兼容性。
 
-.. _sec:using-domains-in-cuda:
+.. _using-domains-in-cuda:
 
 在 CUDA 中使用域
 -------------------------

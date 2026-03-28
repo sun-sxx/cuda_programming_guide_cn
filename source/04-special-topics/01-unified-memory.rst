@@ -1,4 +1,4 @@
-.. _sec:um-details:
+.. _um-details:
 
 4.1. 统一内存
 =============

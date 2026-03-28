@@ -1,4 +1,4 @@
-.. _sec:graphics-interop-details:
+.. _graphics-interop-details:
 
 4.19. CUDA 与图形 API 互操作
 ============================

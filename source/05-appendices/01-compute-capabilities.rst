@@ -87,9 +87,9 @@
 
 - ``compute_100`` 编译目标不允许使用架构特定功能。此目标将与计算能力 10.0 及更高版本的所有设备兼容。
 
-- ``compute_100f`` *系列特定*编译目标允许使用 GPU 系列中通用的架构特定功能子集。此目标仅与属于该 GPU 系列的设备兼容。在此示例中，它与计算能力 10.0 和计算能力 10.3 的设备兼容。系列特定 ``compute_100f`` 目标中可用的功能是基准 ``compute_100`` 目标中可用功能的超集。
+- ``compute_100f`` *系列特定* 编译目标允许使用 GPU 系列中通用的架构特定功能子集。此目标仅与属于该 GPU 系列的设备兼容。在此示例中，它与计算能力 10.0 和计算能力 10.3 的设备兼容。系列特定 ``compute_100f`` 目标中可用的功能是基准 ``compute_100`` 目标中可用功能的超集。
 
-- ``compute_100a`` *架构特定*编译目标允许使用计算能力 10.0 设备中的完整架构特定功能集。此目标仅与计算能力 10.0 的设备兼容，不与其他设备兼容。``compute_100a`` 目标中可用的功能构成了 ``compute_100f`` 目标中可用功能的超集。
+- ``compute_100a`` *架构特定* 编译目标允许使用计算能力 10.0 设备中的完整架构特定功能集。此目标仅与计算能力 10.0 的设备兼容，不与其他设备兼容。 ``compute_100a`` 目标中可用的功能构成了 ``compute_100f`` 目标中可用功能的超集。
 
 .. _compute-capabilities-family-specific-compatibility:
 
@@ -174,7 +174,7 @@
      - Yes
      - Yes
      - Yes
-   * - 硬件加速的 ``memcpy_async``（ :ref:`pipelines` ）
+   * - 硬件加速的 ``memcpy_async`` （ :ref:`pipelines` ）
      - No
      - Yes
      - Yes
@@ -582,7 +582,7 @@
      - 128
      - 0, 8, 16, 32, 64, 100
 
-:ref:`compute-capabilities-table-tensor-core-data-types-per-compute-capability` 显示了 Tensor Core 加速支持的输入数据类型。Tensor Core 功能集可通过内联 PTX 在 CUDA 编译工具链中使用。强烈建议应用程序通过 CUDA-X 库（如 cuDNN、cuBLAS 和 cuFFT）或通过 `CUTLASS <https://docs.nvidia.com/cutlass/index.html>`__（一组 CUDA C++ 模板抽象和 Python 领域特定语言 (DSL)，旨在支持 CUDA 各级别的高性能矩阵-矩阵乘法 (GEMM) 和相关计算）使用此功能集。
+:ref:`compute-capabilities-table-tensor-core-data-types-per-compute-capability` 显示了 Tensor Core 加速支持的输入数据类型。Tensor Core 功能集可通过内联 PTX 在 CUDA 编译工具链中使用。强烈建议应用程序通过 CUDA-X 库（如 cuDNN、cuBLAS 和 cuFFT）或通过 `CUTLASS <https://docs.nvidia.com/cutlass/index.html>`__ （一组 CUDA C++ 模板抽象和 Python 领域特定语言 （DSL），旨在支持 CUDA 各级别的高性能矩阵-矩阵乘法 （GEMM） 和相关计算）使用此功能集。
 
 .. _compute-capabilities-table-tensor-core-data-types-per-compute-capability:
 

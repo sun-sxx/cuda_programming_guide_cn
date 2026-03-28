@@ -1,4 +1,4 @@
-.. _sec:interprocess-communication-details:
+.. _interprocess-communication-details:
 
 进程间通信
 ================
@@ -19,12 +19,12 @@
 
    CUDA 虚拟内存管理 API 允许在内存分配时对对等可访问性和共享进行每分配控制，但需要使用 CUDA Driver API。
 
-.. _sec:cuda-ipc:
+.. _cuda-ipc:
 
 使用传统进程间通信 API 的 IPC
 ----------------------------------
 
-要跨进程共享设备内存指针和事件，应用程序必须使用 CUDA 进程间通信 API，该 API 在参考手册中有详细描述。IPC API 允许应用程序使用 ``cudaIpcGetMemHandle()`` 获取给定设备内存指针的 IPC 句柄。CUDA IPC 句柄可以使用标准主机操作系统 IPC 机制（例如进程间共享内存或文件）传递给另一个进程。``cudaIpcOpenMemHandle()`` 使用 IPC 句柄检索有效的设备指针，该指针可以在其他进程内使用。事件句柄可以使用类似的入口点共享。
+要跨进程共享设备内存指针和事件，应用程序必须使用 CUDA 进程间通信 API，该 API 在参考手册中有详细描述。IPC API 允许应用程序使用 ``cudaIpcGetMemHandle()`` 获取给定设备内存指针的 IPC 句柄。CUDA IPC 句柄可以使用标准主机操作系统 IPC 机制（例如进程间共享内存或文件）传递给另一个进程。 ``cudaIpcOpenMemHandle()`` 使用 IPC 句柄检索有效的设备指针，该指针可以在其他进程内使用。事件句柄可以使用类似的入口点共享。
 
 使用 IPC API 的一个示例是单个主进程生成一批输入数据，使数据可供多个辅助进程使用，而无需重新生成或复制。
 

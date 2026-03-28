@@ -1,28 +1,28 @@
-.. _sec:error-log-management-details:
+.. _error-log-management-details:
 
 错误日志管理
 =============
 
 错误日志管理（Error Log Management）机制允许 CUDA API 错误以通俗易懂的英语格式向开发者报告，描述问题的原因。
 
-.. _sec:error-log-management-background:
+.. _error-log-management-background:
 
 背景
 ----
 
 传统上，CUDA API 调用失败的唯一指示是非零代码的返回。截至 CUDA Toolkit 12.9，CUDA Runtime 为错误条件定义了超过 100 种不同的返回代码，但其中许多是通用的，无法帮助开发者调试原因。
 
-.. _sec:error-log-management-activation:
+.. _error-log-management-activation:
 
 激活
 ----
 
-设置 ``CUDA_LOG_FILE`` 环境变量。可接受的值为 ``stdout``、``stderr`` 或系统中用于写入文件的有效路径。即使程序执行前未设置 ``CUDA_LOG_FILE``，也可以通过 API 转储日志缓冲区。
+设置 ``CUDA_LOG_FILE`` 环境变量。可接受的值为 ``stdout``、``stderr`` 或系统中用于写入文件的有效路径。即使程序执行前未设置 ``CUDA_LOG_FILE`` ，也可以通过 API 转储日志缓冲区。
 
 .. note::
    无错误的执行可能不会打印任何日志。
 
-.. _sec:error-log-management-output:
+.. _error-log-management-output:
 
 输出
 ----
@@ -39,9 +39,9 @@
 
    [22:21:32.099][25642][CUDA][E][cuLogsDumpToMemory] buffer cannot be NULL
 
-而在之前，开发者只能从返回代码中获得 ``CUDA_ERROR_INVALID_VALUE``，如果调用 ``cuGetErrorString`` 可能会得到"invalid argument"。
+而在之前，开发者只能从返回代码中获得 ``CUDA_ERROR_INVALID_VALUE`` ，如果调用 ``cuGetErrorString`` 可能会得到"invalid argument"。
 
-.. _sec:error-log-management-api-description:
+.. _error-log-management-api-description:
 
 API 描述
 --------
@@ -60,7 +60,7 @@ CUDA Driver 提供两类 API 用于与错误日志管理功能交互。
 
    CUresult cuLogsRegisterCallback(CUlogsCallback callbackFunc, void *userData, CUlogsCallbackHandle *callback_out)
 
-其中 ``userData`` 不经修改地传递给回调函数。``callback_out`` 应由调用者存储，以便在 ``cuLogsUnregisterCallback`` 中使用。
+其中 ``userData`` 不经修改地传递给回调函数。 ``callback_out`` 应由调用者存储，以便在 ``cuLogsUnregisterCallback`` 中使用。
 
 .. code-block:: c++
 
@@ -93,9 +93,9 @@ flags 参数必须为 0，其他选项保留供未来 CUDA 版本使用。
 
 #. 如果 ``size`` 中提供的值不足以存储所有所需的日志，将添加一条注释作为第一个条目，并且无法容纳的最旧条目将不会被转储。
 
-#. 返回后，``size`` 将包含实际写入所提供缓冲区的字节数。
+#. 返回后， ``size`` 将包含实际写入所提供缓冲区的字节数。
 
-.. _sec:error-log-management-limitations:
+.. _error-log-management-limitations:
 
 限制和已知问题
 --------------

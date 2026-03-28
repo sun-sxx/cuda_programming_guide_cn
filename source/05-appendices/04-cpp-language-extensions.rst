@@ -1,4 +1,4 @@
-.. _sec:cpp-language-extensions:
+.. _cpp-language-extensions:
 
 5.4. C/C++ 语言扩展
 ===================

@@ -1,4 +1,4 @@
-.. _sec:device-callable-apis:
+.. _device-callable-apis:
 
 5.6. 设备可调用 API 和内建函数
 ==============================

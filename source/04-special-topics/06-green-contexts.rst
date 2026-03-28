@@ -1,4 +1,4 @@
-.. _sec:green-contexts-details:
+.. _green-contexts-details:
 
 4.6. Green Contexts
 ===================

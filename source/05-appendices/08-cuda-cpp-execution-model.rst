@@ -133,11 +133,11 @@ CUDA C++ 编程语言是 C++ 编程语言的扩展。本节记录了对当前 `I
 
 CUDA API 调用应最终返回或确保至少一个设备线程取得进展。
 
-CUDA 查询函数（例如 `cudaStreamQuery <https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__STREAM.html#group__CUDART__STREAM_1g2021adeb17905c7ec2a3c1bf125c5435>`__、`cudaEventQuery <https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__EVENT.html#group__CUDART__EVENT_1g2bf738909b4a059023537eaa29d8a5b7>`__ 等）不应在没有设备线程取得进展的情况下持续返回 ``cudaErrorNotReady``。
+CUDA 查询函数（例如 `cudaStreamQuery <https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__STREAM.html#group__CUDART__STREAM_1g2021adeb17905c7ec2a3c1bf125c5435>`__、`cudaEventQuery <https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__EVENT.html#group__CUDART__EVENT_1g2bf738909b4a059023537eaa29d8a5b7>`__ 等）不应在没有设备线程取得进展的情况下持续返回 ``cudaErrorNotReady`` 。
 
 [注：设备线程不需要与 API 调用"相关"，例如，在一个流或进程上操作的 API 可以确保另一个流或进程上的设备线程取得进展。——尾注]
 
-[注：测试程序是否符合 CUDA API 前进保证的一种简单但不充分的方法是使用以下环境变量运行程序：``CUDA_DEVICE_MAX_CONNECTIONS=1 CUDA_LAUNCH_BLOCKING=1``，然后检查程序是否仍然终止。如果不终止，程序就有错误。此方法不充分，因为它不能捕获所有前进保证错误，但确实能捕获许多此类错误。——尾注]
+[注：测试程序是否符合 CUDA API 前进保证的一种简单但不充分的方法是使用以下环境变量运行程序： ``CUDA_DEVICE_MAX_CONNECTIONS=1 CUDA_LAUNCH_BLOCKING=1`` ，然后检查程序是否仍然终止。如果不终止，程序就有错误。此方法不充分，因为它不能捕获所有前进保证错误，但确实能捕获许多此类错误。——尾注]
 
 .. dropdown:: CUDA API 前进保证示例
 

@@ -88,7 +88,7 @@ cuda_guide_cn/
 :doc:`document-name`          # Link to another document
 :ref:`label-name`             # Link to a labeled section
 
-.. _sec:introduction:         # Define a label
+.. _introduction:         # Define a label
 
 Introduction
 ------------
@@ -144,7 +144,7 @@ release = '0.1'
 
 **RST File Names**: Use lowercase with hyphens (`programming-model.rst`), keep names short but descriptive, group related files with prefixes (`memory-*.rst`)
 
-**RST Labels**: Use descriptive prefixes (`sec:`, `fig:`, `tbl:`, `lst:`, `eq:`), e.g., `.. _sec:programming-model:`
+**RST Labels**: Use descriptive prefixes (`sec:`, `fig:`, `tbl:`, `lst:`, `eq:`), e.g., `.. _programming-model:`
 
 ## Error Handling
 

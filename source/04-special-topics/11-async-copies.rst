@@ -1,4 +1,4 @@
-.. _sec:async-copies-details:
+.. _async-copies-details:
 
 4.11. 异步数据拷贝
 ==================

@@ -1,4 +1,4 @@
-.. _sec:cuda-graphs-details:
+.. _cuda-graphs-details:
 
 4.2. CUDA Graphs
 ================

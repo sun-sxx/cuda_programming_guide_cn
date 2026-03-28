@@ -78,7 +78,7 @@ L2 持久性也可以为 CUDA Graph Kernel Node 设置，如下例所示：
    // 将属性设置到 cudaGraphNode_t 类型的 CUDA Graph Kernel 节点
    cudaGraphKernelNodeSetAttribute(node, cudaKernelNodeAttributeAccessPolicyWindow, &node_attribute);
 
-``hitRatio`` 参数可用于指定接收 ``hitProp`` 属性的访问比例。在上面的两个示例中，全局内存区域 ``[ptr..ptr+num_bytes)`` 中 60% 的内存访问具有持久化属性，40% 的内存访问具有流式属性。哪些特定的内存访问被分类为持久化（即 ``hitProp`` ）是随机的，概率约为 ``hitRatio``；概率分布取决于硬件架构和内存范围。
+``hitRatio`` 参数可用于指定接收 ``hitProp`` 属性的访问比例。在上面的两个示例中，全局内存区域 ``[ptr..ptr+num_bytes)`` 中 60% 的内存访问具有持久化属性，40% 的内存访问具有流式属性。哪些特定的内存访问被分类为持久化（即 ``hitProp`` ）是随机的，概率约为 ``hitRatio`` ；概率分布取决于硬件架构和内存范围。
 
 例如，如果 L2 预留缓存大小为 16KB，而 ``accessPolicyWindow`` 中的 ``num_bytes`` 为 32KB：
 
@@ -87,7 +87,7 @@ L2 持久性也可以为 CUDA Graph Kernel Node 设置，如下例所示：
 
 因此，可以使用 ``hitRatio`` 来避免缓存行的颠簸，并总体上减少移入和移出 L2 缓存的数据量。
 
-低于 1.0 的 ``hitRatio`` 值可用于手动控制来自并发 CUDA stream 的不同 ``accessPolicyWindow`` 可以在 L2 中缓存的数据量。例如，假设 L2 预留缓存大小为 16KB；两个不同 CUDA stream 中的两个并发 kernel，各自有 16KB 的 ``accessPolicyWindow``，且 ``hitRatio`` 值都为 1.0，在竞争共享的 L2 资源时可能会相互驱逐对方的缓存行。但是，如果两个 ``accessPolicyWindow`` 的 hitRatio 值都为 0.5，它们就不太可能驱逐自己或对方的持久化缓存行。
+低于 1.0 的 ``hitRatio`` 值可用于手动控制来自并发 CUDA stream 的不同 ``accessPolicyWindow`` 可以在 L2 中缓存的数据量。例如，假设 L2 预留缓存大小为 16KB；两个不同 CUDA stream 中的两个并发 kernel，各自有 16KB 的 ``accessPolicyWindow`` ，且 ``hitRatio`` 值都为 1.0，在竞争共享的 L2 资源时可能会相互驱逐对方的缓存行。但是，如果两个 ``accessPolicyWindow`` 的 hitRatio 值都为 0.5，它们就不太可能驱逐自己或对方的持久化缓存行。
 
 .. _l2-access-prop:
 
@@ -96,11 +96,11 @@ L2 访问属性
 
 为不同的全局内存数据访问定义了三种类型的访问属性：
 
-1. ``cudaAccessPropertyStreaming``：以流式属性发生的内存访问不太可能持久化在 L2 缓存中，因为这些访问会被优先驱逐。
+1. ``cudaAccessPropertyStreaming`` ：以流式属性发生的内存访问不太可能持久化在 L2 缓存中，因为这些访问会被优先驱逐。
 
-2. ``cudaAccessPropertyPersisting``：以持久化属性发生的内存访问更有可能持久化在 L2 缓存中，因为这些访问会被优先保留在 L2 缓存的预留部分。
+2. ``cudaAccessPropertyPersisting`` ：以持久化属性发生的内存访问更有可能持久化在 L2 缓存中，因为这些访问会被优先保留在 L2 缓存的预留部分。
 
-3. ``cudaAccessPropertyNormal``：此访问属性强制将先前应用的持久化访问属性重置为正常状态。来自先前 CUDA kernel 的具有持久化属性的内存访问可能会在其预期用途之后很长时间仍保留在 L2 缓存中。这种使用后的持久性减少了不使用持久化属性的后续 kernel 可用的 L2 缓存量。使用 ``cudaAccessPropertyNormal`` 属性重置访问策略窗口可以移除先前访问的持久化（优先保留）状态，就像先前访问没有访问属性一样。
+3. ``cudaAccessPropertyNormal`` ：此访问属性强制将先前应用的持久化访问属性重置为正常状态。来自先前 CUDA kernel 的具有持久化属性的内存访问可能会在其预期用途之后很长时间仍保留在 L2 缓存中。这种使用后的持久性减少了不使用持久化属性的后续 kernel 可用的 L2 缓存量。使用 ``cudaAccessPropertyNormal`` 属性重置访问策略窗口可以移除先前访问的持久化（优先保留）状态，就像先前访问没有访问属性一样。
 
 .. _l2-simple-example:
 
@@ -178,16 +178,16 @@ L2 持久化示例
 
 CUDA 设备属性包括：
 
-- ``l2CacheSize``：GPU 上可用的 L2 缓存量。
-- ``persistingL2CacheMaxSize``：可以为持久化内存访问预留的最大 L2 缓存量。
-- ``accessPolicyMaxWindowSize``：访问策略窗口的最大大小。
+- ``l2CacheSize`` ：GPU 上可用的 L2 缓存量。
+- ``persistingL2CacheMaxSize`` ：可以为持久化内存访问预留的最大 L2 缓存量。
+- ``accessPolicyMaxWindowSize`` ：访问策略窗口的最大大小。
 
 .. _l2-cache-getset-size:
 
 控制持久化内存访问的 L2 缓存预留大小
 -------------------------------------
 
-用于持久化内存访问的 L2 预留缓存大小使用 CUDA runtime API ``cudaDeviceGetLimit`` 查询，并使用 CUDA runtime API ``cudaDeviceSetLimit`` 作为 ``cudaLimit`` 设置。设置此限制的最大值是 ``cudaDeviceProp::persistingL2CacheMaxSize``。
+用于持久化内存访问的 L2 预留缓存大小使用 CUDA runtime API ``cudaDeviceGetLimit`` 查询，并使用 CUDA runtime API ``cudaDeviceSetLimit`` 作为 ``cudaLimit`` 设置。设置此限制的最大值是 ``cudaDeviceProp::persistingL2CacheMaxSize`` 。
 
 .. code-block:: c++
 

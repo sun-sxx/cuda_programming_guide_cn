@@ -1,4 +1,4 @@
-.. _sec:mathematical-functions:
+.. _mathematical-functions:
 
 5.5. 浮点计算
 =============

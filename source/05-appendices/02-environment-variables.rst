@@ -1,16 +1,16 @@
-.. _sec:environment-variables-details:
+.. _environment-variables-details:
 
 5.2. CUDA 环境变量
 ==================
 
 以下部分列出了 CUDA 环境变量。与多进程服务 (MPS) 相关的环境变量记录在 `GPU 部署和管理指南 <https://docs.nvidia.com/deploy/mps/index.html#environment-variables>`_ 中。
 
-.. _sec:device-enumeration-and-properties:
+.. _device-enumeration-and-properties:
 
 5.2.1. 设备枚举和属性
 ---------------------
 
-.. _sec:cuda-visible-devices:
+.. _cuda-visible-devices:
 
 5.2.1.1. ``CUDA_VISIBLE_DEVICES``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -29,9 +29,9 @@ GPU 标识符的提供方式如下：
 
   - 如果遇到无效索引，则只有索引在无效索引之前出现的设备才可见。例如，设置 ``CUDA_VISIBLE_DEVICES=0,2,-1,1`` 会使设备 0 和 2 可见，而设备 1 不可见，因为它出现在无效索引 ``-1`` 之后。
 
-- **GPU UUID 字符串**：这些应遵循 ``nvidia-smi -L`` 给出的相同格式，例如 ``GPU-8932f937-d72c-4106-c12f-20bd9faed9f6``。但是，为了方便起见，允许使用缩写形式；只需指定 GPU UUID 开头的足够数字即可在目标系统中唯一标识该 GPU。例如，假设系统中没有其他 GPU 共享此前缀，则 ``CUDA_VISIBLE_DEVICES=GPU-8932f937`` 可能是引用上述 GPU UUID 的有效方式。
+- **GPU UUID 字符串**：这些应遵循 ``nvidia-smi -L`` 给出的相同格式，例如 ``GPU-8932f937-d72c-4106-c12f-20bd9faed9f6`` 。但是，为了方便起见，允许使用缩写形式；只需指定 GPU UUID 开头的足够数字即可在目标系统中唯一标识该 GPU。例如，假设系统中没有其他 GPU 共享此前缀，则 ``CUDA_VISIBLE_DEVICES=GPU-8932f937`` 可能是引用上述 GPU UUID 的有效方式。
 
-- `多实例 GPU (MIG) <https://docs.nvidia.com/datacenter/tesla/mig-user-guide/>`_ 支持：``MIG-<GPU-UUID>/<GPU 实例 ID>/<计算实例 ID>``。例如，``MIG-GPU-8932f937-d72c-4106-c12f-20bd9faed9f6/1/2``。仅支持单个 MIG 实例枚举。
+- `多实例 GPU (MIG) <https://docs.nvidia.com/datacenter/tesla/mig-user-guide/>`_ 支持： ``MIG-<GPU-UUID>/<GPU 实例 ID>/<计算实例 ID>`` 。例如， ``MIG-GPU-8932f937-d72c-4106-c12f-20bd9faed9f6/1/2`` 。仅支持单个 MIG 实例枚举。
 
 ``cudaGetDeviceCount()`` API 返回的设备计数仅包括可见设备，因此使用整数设备标识符的 CUDA API 仅支持 [0, 可见设备计数 - 1] 范围内的序号。GPU 设备的枚举顺序决定了序号值。例如，使用 ``CUDA_VISIBLE_DEVICES=2,1`` 时，调用 ``cudaSetDevice(0)`` 会将设备 2 设置为当前设备，因为它首先被枚举并分配了序号 0。之后调用 ``cudaGetDevice(&device_ordinal)`` 也会将 ``device_ordinal`` 设置为 0，这对应于设备 2。
 
@@ -46,7 +46,7 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-device-order:
+.. _cuda-device-order:
 
 5.2.1.2. ``CUDA_DEVICE_ORDER``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -55,9 +55,9 @@ GPU 标识符的提供方式如下：
 
 **可选值**：
 
-- ``FASTEST_FIRST``：使用简单的启发式方法从最快到最慢枚举可用设备（默认）。
+- ``FASTEST_FIRST`` ：使用简单的启发式方法从最快到最慢枚举可用设备（默认）。
 
-- ``PCI_BUS_ID``：按 PCI 总线 ID 升序枚举可用设备。可以使用 ``nvidia-smi --query-gpu=name,pci.bus_id`` 获取 PCI 总线 ID。
+- ``PCI_BUS_ID`` ：按 PCI 总线 ID 升序枚举可用设备。可以使用 ``nvidia-smi --query-gpu=name,pci.bus_id`` 获取 PCI 总线 ID。
 
 **示例**：
 
@@ -69,7 +69,7 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-managed-force-device-alloc:
+.. _cuda-managed-force-device-alloc:
 
 5.2.1.3. ``CUDA_MANAGED_FORCE_DEVICE_ALLOC``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -78,9 +78,9 @@ GPU 标识符的提供方式如下：
 
 **可选值**：数值，为零或非零。
 
-- **非零值**：强制驱动程序使用设备内存进行物理存储。进程中使用的所有支持托管内存的设备必须具有点对点兼容性。否则，将返回 ``cudaErrorInvalidDevice``。
+- **非零值**：强制驱动程序使用设备内存进行物理存储。进程中使用的所有支持托管内存的设备必须具有点对点兼容性。否则，将返回 ``cudaErrorInvalidDevice`` 。
 
-- ``0``：默认行为。
+- ``0`` ：默认行为。
 
 **示例**：
 
@@ -91,12 +91,12 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:jit-compilation:
+.. _jit-compilation:
 
 5.2.2. JIT 编译
 ---------------
 
-.. _sec:cuda-cache-disable:
+.. _cuda-cache-disable:
 
 5.2.2.1. ``CUDA_CACHE_DISABLE``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -107,9 +107,9 @@ GPU 标识符的提供方式如下：
 
 **可选值**：
 
-- ``1``：禁用 PTX JIT 缓存。
+- ``1`` ：禁用 PTX JIT 缓存。
 
-- ``0``：启用 PTX JIT 缓存（默认）。
+- ``0`` ：启用 PTX JIT 缓存（默认）。
 
 **示例**：
 
@@ -120,7 +120,7 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-cache-path:
+.. _cuda-cache-path:
 
 5.2.2.2. ``CUDA_CACHE_PATH``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -129,9 +129,9 @@ GPU 标识符的提供方式如下：
 
 **可选值**：缓存目录的绝对路径（具有适当的访问权限）。默认值为：
 
-- 在 Windows 上，``%APPDATA%\NVIDIA\ComputeCache``
+- 在 Windows 上， ``%APPDATA%\NVIDIA\ComputeCache``
 
-- 在 Linux 上，``~/.nv/ComputeCache``
+- 在 Linux 上， ``~/.nv/ComputeCache``
 
 **示例**：
 
@@ -141,7 +141,7 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-cache-maxsize:
+.. _cuda-cache-maxsize:
 
 5.2.2.3. ``CUDA_CACHE_MAXSIZE``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -150,9 +150,9 @@ GPU 标识符的提供方式如下：
 
 **可选值**：字节数。默认值为：
 
-- 在桌面/服务器平台上，``1073741824`` （1 GiB）
+- 在桌面/服务器平台上， ``1073741824`` （1 GiB）
 
-- 在嵌入式平台上，``268435456`` （256 MiB）
+- 在嵌入式平台上， ``268435456`` （256 MiB）
 
 最大大小为 ``4294967296`` （4 GiB）。
 
@@ -164,7 +164,7 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-force-ptx-jit-and-cuda-force-jit:
+.. _cuda-force-ptx-jit-and-cuda-force-jit:
 
 5.2.2.4. ``CUDA_FORCE_PTX_JIT`` 和 ``CUDA_FORCE_JIT``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -173,13 +173,13 @@ GPU 标识符的提供方式如下：
 
 强制 JIT 编译会增加应用程序在初始执行期间的加载时间。但是，它可用于验证 PTX 代码是否嵌入在应用程序中以及其即时编译是否正常工作。这确保了与未来架构的 `前向兼容性 <https://docs.nvidia.com/deploy/cuda-compatibility/>`_。
 
-``CUDA_FORCE_PTX_JIT`` 优先于 ``CUDA_FORCE_JIT``。
+``CUDA_FORCE_PTX_JIT`` 优先于 ``CUDA_FORCE_JIT`` 。
 
 **可选值**：
 
-- ``1``：强制 PTX JIT 编译。
+- ``1`` ：强制 PTX JIT 编译。
 
-- ``0``：默认行为。
+- ``0`` ：默认行为。
 
 **示例**：
 
@@ -189,7 +189,7 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-disable-ptx-jit-and-cuda-disable-jit:
+.. _cuda-disable-ptx-jit-and-cuda-disable-jit:
 
 5.2.2.5. ``CUDA_DISABLE_PTX_JIT`` 和 ``CUDA_DISABLE_JIT``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -198,13 +198,13 @@ GPU 标识符的提供方式如下：
 
 如果内核没有嵌入的二进制代码，或者嵌入的二进制是为不兼容的架构编译的，则内核将无法加载。这些环境变量可用于验证应用程序是否为每个内核生成了兼容的 CUBIN 代码。有关更多详细信息，请参阅 :ref:`sec:binary-compatibility` 部分。
 
-``CUDA_DISABLE_PTX_JIT`` 优先于 ``CUDA_DISABLE_JIT``。
+``CUDA_DISABLE_PTX_JIT`` 优先于 ``CUDA_DISABLE_JIT`` 。
 
 **可选值**：
 
-- ``1``：禁用 PTX JIT 编译。
+- ``1`` ：禁用 PTX JIT 编译。
 
-- ``0``：默认行为。
+- ``0`` ：默认行为。
 
 **示例**：
 
@@ -214,7 +214,7 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-force-preload-libraries:
+.. _cuda-force-preload-libraries:
 
 5.2.2.6. ``CUDA_FORCE_PRELOAD_LIBRARIES``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -223,9 +223,9 @@ GPU 标识符的提供方式如下：
 
 **可选值**：
 
-- ``1``：强制驱动程序在初始化期间预加载 :ref:`sec:just-in-time-compilation` 和 `NVVM <https://docs.nvidia.com/cuda/nvvm-ir-spec/>`_ 所需的库。这会增加 CUDA 驱动程序初始化所需的内存占用和时间。设置此环境变量对于避免涉及多线程的某些死锁情况是必要的。
+- ``1`` ：强制驱动程序在初始化期间预加载 :ref:`sec:just-in-time-compilation` 和 `NVVM <https://docs.nvidia.com/cuda/nvvm-ir-spec/>`_ 所需的库。这会增加 CUDA 驱动程序初始化所需的内存占用和时间。设置此环境变量对于避免涉及多线程的某些死锁情况是必要的。
 
-- ``0``：默认行为。
+- ``0`` ：默认行为。
 
 **示例**：
 
@@ -235,12 +235,12 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:execution:
+.. _execution:
 
 5.2.3. 执行
 -----------
 
-.. _sec:cuda-launch-blocking:
+.. _cuda-launch-blocking:
 
 5.2.3.1. ``CUDA_LAUNCH_BLOCKING``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -251,9 +251,9 @@ GPU 标识符的提供方式如下：
 
 **可选值**：
 
-- ``1``：禁用异步执行。
+- ``1`` ：禁用异步执行。
 
-- ``0``：异步执行（默认）。
+- ``0`` ：异步执行（默认）。
 
 **示例**：
 
@@ -263,7 +263,7 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-device-max-connections:
+.. _cuda-device-max-connections:
 
 5.2.3.2. ``CUDA_DEVICE_MAX_CONNECTIONS``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -272,7 +272,7 @@ GPU 标识符的提供方式如下：
 
 设置此环境变量也会修改复制连接的数量，除非通过 ``CUDA_DEVICE_MAX_COPY_CONNECTIONS`` 环境变量显式设置。
 
-**可选值**：``1`` 到 ``32`` 个连接，默认为 ``8`` （假设没有 MPS）
+**可选值**： ``1`` 到 ``32`` 个连接，默认为 ``8`` （假设没有 MPS）
 
 **示例**：
 
@@ -282,16 +282,16 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-device-max-copy-connections:
+.. _cuda-device-max-copy-connections:
 
 5.2.3.3. ``CUDA_DEVICE_MAX_COPY_CONNECTIONS``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 该环境变量控制复制操作中涉及的并发复制连接（工作队列）的数量。它仅影响 :ref:`sec:compute-capabilities` 8.0 及以上的设备。
 
-如果同时设置了 ``CUDA_DEVICE_MAX_COPY_CONNECTIONS`` 和 ``CUDA_DEVICE_MAX_CONNECTIONS``，则 ``CUDA_DEVICE_MAX_COPY_CONNECTIONS`` 会覆盖通过 ``CUDA_DEVICE_MAX_CONNECTIONS`` 设置的复制连接值。
+如果同时设置了 ``CUDA_DEVICE_MAX_COPY_CONNECTIONS`` 和 ``CUDA_DEVICE_MAX_CONNECTIONS`` ，则 ``CUDA_DEVICE_MAX_COPY_CONNECTIONS`` 会覆盖通过 ``CUDA_DEVICE_MAX_CONNECTIONS`` 设置的复制连接值。
 
-**可选值**：``1`` 到 ``32`` 个连接，默认为 ``8`` （假设没有 MPS）
+**可选值**： ``1`` 到 ``32`` 个连接，默认为 ``8`` （假设没有 MPS）
 
 **示例**：
 
@@ -301,16 +301,16 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-scale-launch-queues:
+.. _cuda-scale-launch-queues:
 
 5.2.3.4. ``CUDA_SCALE_LAUNCH_QUEUES``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 该环境变量指定用于启动工作（命令缓冲区）的队列大小的缩放因子，即可以在设备上排队的挂起内核或主机/设备复制操作的总数。
 
-**可选值**：``0.25x``、``0.5x``、``2x``、``4x``
+**可选值**： ``0.25x``、``0.5x``、``2x``、``4x``
 
-- 任何非 ``0.25x``、``0.5x``、``2x`` 或 ``4x`` 的值都被解释为 ``1x``。
+- 任何非 ``0.25x``、``0.5x``、``2x`` 或 ``4x`` 的值都被解释为 ``1x`` 。
 
 **示例**：
 
@@ -320,7 +320,7 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-graphs-use-node-priority:
+.. _cuda-graphs-use-node-priority:
 
 5.2.3.5. ``CUDA_GRAPHS_USE_NODE_PRIORITY``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -331,9 +331,9 @@ GPU 标识符的提供方式如下：
 
 **可选值**：
 
-- ``0``：继承图启动到的流的优先级（默认）。
+- ``0`` ：继承图启动到的流的优先级（默认）。
 
-- ``1``：遵循每节点启动优先级。CUDA 运行时将节点级优先级视为就绪运行的图节点的调度提示。
+- ``1`` ：遵循每节点启动优先级。CUDA 运行时将节点级优先级视为就绪运行的图节点的调度提示。
 
 **示例**：
 
@@ -343,7 +343,7 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-device-waits-on-exception:
+.. _cuda-device-waits-on-exception:
 
 5.2.3.6. ``CUDA_DEVICE_WAITS_ON_EXCEPTION``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -354,9 +354,9 @@ GPU 标识符的提供方式如下：
 
 **可选值**：
 
-- ``0``：默认行为。
+- ``0`` ：默认行为。
 
-- ``1``：发生设备异常时暂停。
+- ``1`` ：发生设备异常时暂停。
 
 **示例**：
 
@@ -366,7 +366,7 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-device-default-persisting-l2-cache-percentage-limit:
+.. _cuda-device-default-persisting-l2-cache-percentage-limit:
 
 5.2.3.7. ``CUDA_DEVICE_DEFAULT_PERSISTING_L2_CACHE_PERCENTAGE_LIMIT``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -385,7 +385,7 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-disable-perf-boost:
+.. _cuda-disable-perf-boost:
 
 5.2.3.8. ``CUDA_DISABLE_PERF_BOOST``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -399,12 +399,12 @@ GPU 标识符的提供方式如下：
    CUDA_DISABLE_PERF_BOOST=1  # 禁用性能提升，仅限 Linux
    CUDA_DISABLE_PERF_BOOST=0  # 默认行为
 
-.. _sec:cuda-auto-boost-deprecated:
+.. _cuda-auto-boost-deprecated:
 
 5.2.3.9. ``CUDA_AUTO_BOOST`` [[已弃用]]
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-该环境变量影响 GPU 时钟「自动提升」行为，即动态时钟提升。它会覆盖 ``nvidia-smi`` 工具的「自动提升」选项，即 ``nvidia-smi --auto-boost-default=0``。
+该环境变量影响 GPU 时钟「自动提升」行为，即动态时钟提升。它会覆盖 ``nvidia-smi`` 工具的「自动提升」选项，即 ``nvidia-smi --auto-boost-default=0`` 。
 
 .. note::
 
@@ -412,12 +412,12 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:module-loading:
+.. _module-loading:
 
 5.2.4. 模块加载
 ---------------
 
-.. _sec:cuda-module-loading:
+.. _cuda-module-loading:
 
 5.2.4.1. ``CUDA_MODULE_LOADING``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -426,13 +426,13 @@ GPU 标识符的提供方式如下：
 
 **可选值**：
 
-- ``DEFAULT``：默认行为，等同于 ``LAZY``。
+- ``DEFAULT`` ：默认行为，等同于 ``LAZY`` 。
 
-- ``LAZY``：特定内核的加载会延迟到使用 ``cuModuleGetFunction()`` 或 ``cuKernelGetFunction()`` API 调用提取 CUDA 函数句柄 ``CUfunc`` 时。在这种情况下，当加载 CUBIN 中的第一个内核或访问 CUBIN 中的第一个变量时，会加载 CUBIN 中的数据。
+- ``LAZY`` ：特定内核的加载会延迟到使用 ``cuModuleGetFunction()`` 或 ``cuKernelGetFunction()`` API 调用提取 CUDA 函数句柄 ``CUfunc`` 时。在这种情况下，当加载 CUBIN 中的第一个内核或访问 CUBIN 中的第一个变量时，会加载 CUBIN 中的数据。
 
   - 驱动程序在首次调用内核时加载所需的代码；后续调用不会产生额外开销。这减少了启动时间和 GPU 内存占用。
 
-- ``EAGER``：在程序初始化时完全加载 CUDA 模块和内核。CUBIN、FATBIN 或 PTX 文件中的所有内核和数据会在相应的 ``cuModuleLoad*`` 和 ``cuLibraryLoad*`` 驱动程序 API 调用时完全加载。
+- ``EAGER`` ：在程序初始化时完全加载 CUDA 模块和内核。CUBIN、FATBIN 或 PTX 文件中的所有内核和数据会在相应的 ``cuModuleLoad*`` 和 ``cuLibraryLoad*`` 驱动程序 API 调用时完全加载。
 
   - 启动时间和 GPU 内存占用较高。内核启动开销是可预测的。
 
@@ -445,7 +445,7 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-module-data-loading:
+.. _cuda-module-data-loading:
 
 5.2.4.2. ``CUDA_MODULE_DATA_LOADING``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -456,13 +456,13 @@ GPU 标识符的提供方式如下：
 
 **可选值**：
 
-- ``DEFAULT``：默认行为，等同于 ``LAZY``。
+- ``DEFAULT`` ：默认行为，等同于 ``LAZY`` 。
 
-- ``LAZY``：模块数据的加载会延迟到需要 CUDA 函数句柄 ``CUfunc`` 时。在这种情况下，当加载 CUBIN 中的第一个内核或访问 CUBIN 中的第一个变量时，会加载 CUBIN 中的数据。
+- ``LAZY`` ：模块数据的加载会延迟到需要 CUDA 函数句柄 ``CUfunc`` 时。在这种情况下，当加载 CUBIN 中的第一个内核或访问 CUBIN 中的第一个变量时，会加载 CUBIN 中的数据。
 
   - 延迟数据加载可能需要上下文同步，这可能会减慢并发执行。
 
-- ``EAGER``：CUBIN、FATBIN 或 PTX 文件中的所有数据会在相应的 ``cuModuleLoad*`` 和 ``cuLibraryLoad*`` API 调用时完全加载。
+- ``EAGER`` ：CUBIN、FATBIN 或 PTX 文件中的所有数据会在相应的 ``cuModuleLoad*`` 和 ``cuLibraryLoad*`` API 调用时完全加载。
 
 **示例**：
 
@@ -470,7 +470,7 @@ GPU 标识符的提供方式如下：
 
    CUDA_MODULE_DATA_LOADING=EAGER
 
-.. _sec:cuda-binary-loader-thread-count:
+.. _cuda-binary-loader-thread-count:
 
 5.2.4.3. ``CUDA_BINARY_LOADER_THREAD_COUNT``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -489,21 +489,21 @@ GPU 标识符的提供方式如下：
 
 ----
 
-.. _sec:cuda-error-log-management:
+.. _cuda-error-log-management:
 
 5.2.5. CUDA 错误日志管理
 -------------------------
 
-.. _sec:cuda-log-file:
+.. _cuda-log-file:
 
 5.2.5.1. ``CUDA_LOG_FILE``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 该环境变量指定一个位置，当支持的 CUDA API 调用返回错误时，将在该位置打印描述性错误日志消息。
 
-例如，如果尝试使用无效的网格配置启动内核，例如 ``kernel<<<1, dim3(1,1,128)>>>(...)``，则该内核将无法启动，``cudaGetLastError()`` 将返回通用的 ``invalid configuration argument`` 错误。如果设置了 ``CUDA_LOG_FILE`` 环境变量，用户可以在日志中看到以下描述性错误消息：``[CUDA][E] Block Dimensions (1,1,128) include one or more values that exceed the device limit of (1024,1024,64)``，并轻松确定指定的块的 z 维度无效。有关更多详细信息，请参阅 :doc:`../04-special-topics/error-log-management`。
+例如，如果尝试使用无效的网格配置启动内核，例如 ``kernel<<<1, dim3(1,1,128)>>>(...)`` ，则该内核将无法启动， ``cudaGetLastError()`` 将返回通用的 ``invalid configuration argument`` 错误。如果设置了 ``CUDA_LOG_FILE`` 环境变量，用户可以在日志中看到以下描述性错误消息： ``[CUDA][E] Block Dimensions (1,1,128) include one or more values that exceed the device limit of (1024,1024,64)`` ，并轻松确定指定的块的 z 维度无效。有关更多详细信息，请参阅 :doc:`../04-special-topics/error-log-management`。
 
-**可选值**：``stdout``、``stderr`` 或有效文件路径（具有适当的访问权限）
+**可选值**： ``stdout``、``stderr`` 或有效文件路径（具有适当的访问权限）
 
 **示例**：
 

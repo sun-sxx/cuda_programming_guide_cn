@@ -1,4 +1,4 @@
-.. _sec:cpp-language-support:
+.. _cpp-language-support:
 
 5.3. C++ 语言支持
 =================

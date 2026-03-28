@@ -1,11 +1,11 @@
-.. _sec:advanced-host-programming:
+.. _advanced-host-programming:
 
 3.1. 高级 CUDA API 和特性
 ==========================
 
 本节将介绍更高级的 CUDA API 和特性的使用。这些主题涵盖的技术或特性通常不需要修改 CUDA kernel，但仍可以从主机端影响应用级行为，包括 GPU 工作执行、性能以及 CPU 端性能。
 
-.. _sec:cudalaunchkernelex:
+.. _cudalaunchkernelex:
 
 3.1.1. cudaLaunchKernelEx
 --------------------------
@@ -17,11 +17,11 @@
 - 动态共享内存（可选，未指定时为 0）
 - 流（未指定时使用默认流）
 
-一些 CUDA 特性可以从 kernel 启动时提供的额外属性和提示中受益。``cudaLaunchKernelEx`` 允许程序通过 ``cudaLaunchConfig_t`` 结构体设置上述执行配置参数。此外，``cudaLaunchConfig_t`` 结构体还允许程序传入零个或多个 ``cudaLaunchAttributes`` 来控制或建议 kernel 启动的其他参数。例如，本章后面讨论的 ``cudaLaunchAttributePreferredSharedMemoryCarveout``（参见 :ref:`配置 L1/共享内存平衡 <sec:advanced-kernel-l1-shared-config>` ）就是使用 ``cudaLaunchKernelEx`` 指定的。本章后面讨论的 ``cudaLaunchAttributeClusterDimension`` 属性用于指定 kernel 启动所需的 cluster 大小。
+一些 CUDA 特性可以从 kernel 启动时提供的额外属性和提示中受益。 ``cudaLaunchKernelEx`` 允许程序通过 ``cudaLaunchConfig_t`` 结构体设置上述执行配置参数。此外， ``cudaLaunchConfig_t`` 结构体还允许程序传入零个或多个 ``cudaLaunchAttributes`` 来控制或建议 kernel 启动的其他参数。例如，本章后面讨论的 ``cudaLaunchAttributePreferredSharedMemoryCarveout``（参见 :ref:`配置 L1/共享内存平衡 <sec:advanced-kernel-l1-shared-config>` ）就是使用 ``cudaLaunchKernelEx`` 指定的。本章后面讨论的 ``cudaLaunchAttributeClusterDimension`` 属性用于指定 kernel 启动所需的 cluster 大小。
 
 支持的属性完整列表及其含义请参阅 `CUDA Runtime API 参考文档 <https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html#group__CUDART__TYPES_1gfc5ed48085f05863b1aeebb14934b056>`_。
 
-.. _sec:launching-clusters:
+.. _launching-clusters:
 
 3.1.2. 启动 Cluster
 --------------------
@@ -30,7 +30,7 @@
 
 :ref:`第 2.1.10.1 节 <sec:intro-cpp-launching-cluster-triple-chevron>` 展示了如何使用三重尖括号表示法指定和启动使用 cluster 的 kernel。在该节中，使用 ``__cluster_dims__`` 注解来指定用于启动 kernel 的 cluster 维度。使用三重尖括号表示法时，cluster 的大小是隐式确定的。
 
-.. _sec:launching-with-clusters-using-cudalaunchkernelex:
+.. _launching-with-clusters-using-cudalaunchkernelex:
 
 3.1.2.1. 使用 cudaLaunchKernelEx 启动 Cluster
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -74,7 +74,7 @@
        }
    }
 
-有两种与线程块 cluster 相关的 ``cudaLaunchAttribute`` 类型：``cudaLaunchAttributeClusterDimension`` 和 ``cudaLaunchAttributePreferredClusterDimension``。
+有两种与线程块 cluster 相关的 ``cudaLaunchAttribute`` 类型： ``cudaLaunchAttributeClusterDimension`` 和 ``cudaLaunchAttributePreferredClusterDimension`` 。
 
 属性 ID ``cudaLaunchAttributeClusterDimension`` 指定执行 cluster 所需的维度。此属性的值 ``clusterDim`` 是一个三维值。grid 的相应维度（x、y 和 z）必须能被指定 cluster 维度的相应维度整除。设置此属性类似于在编译时在 kernel 定义上使用 ``__cluster_dims__`` 属性，如 :ref:`使用三重尖括号表示法启动 cluster <sec:intro-cpp-launching-cluster-triple-chevron>` 中所示，但可以在运行时为同一个 kernel 的不同启动更改此设置。
 
@@ -82,7 +82,7 @@
 
 所有线程块都将在至少为最小 cluster 维度的 cluster 中执行。在可能的情况下，将使用首选维度的 cluster，但不保证所有 cluster 都以首选维度执行。所有线程块都将在最小或首选 cluster 维度的 cluster 中执行。使用首选 cluster 维度的 kernel 必须编写为能在最小或首选 cluster 维度下正确运行。
 
-.. _sec:blocks-as-clusters:
+.. _blocks-as-clusters:
 
 3.1.2.2. 作为 Cluster 的 Block
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -109,11 +109,11 @@ kernel 也可以使用 ``__block_size__`` 注解，它在定义 kernel 时同时
    // 8x8x8 clusters.
    foo<<<dim3(8, 8, 8)>>>();
 
-``__block_size__`` 需要两个字段，每个字段都是包含 3 个元素的元组。第一个元组表示 block 维度，第二个表示 cluster 大小。如果未传递第二个元组，则假设为 ``(1,1,1)``。要指定流，必须在 ``<<<>>>`` 中传递 ``1`` 和 ``0`` 作为第二个和第三个参数，最后是流。传递其他值将导致未定义行为。
+``__block_size__`` 需要两个字段，每个字段都是包含 3 个元素的元组。第一个元组表示 block 维度，第二个表示 cluster 大小。如果未传递第二个元组，则假设为 ``(1,1,1)`` 。要指定流，必须在 ``<<<>>>`` 中传递 ``1`` 和 ``0`` 作为第二个和第三个参数，最后是流。传递其他值将导致未定义行为。
 
 请注意，同时指定 ``__block_size__`` 的第二个元组和 ``__cluster_dims__`` 是非法的。在空的 ``__cluster_dims__`` 情况下使用 ``__block_size__`` 也是非法的。当指定了 ``__block_size__`` 的第二个元组时，意味着启用了"Blocks as Clusters"模式，编译器会将 ``<<<>>>`` 内的第一个参数识别为 cluster 数量而非线程块数量。
 
-.. _sec:more-on-streams-and-events:
+.. _more-on-streams-and-events:
 
 3.1.3. 关于流和事件的更多内容
 ------------------------------
@@ -152,7 +152,7 @@ kernel 也可以使用 ``__block_size__`` 注解，它在定义 kernel 时同时
 
 CUDA 事件默认携带计时信息，因为它们可以在 ``cudaEventElapsedTime()`` API 调用中使用。然而，仅用于表达流间依赖关系的 CUDA 事件不需要计时信息。对于这种情况，建议创建禁用计时信息的事件以提高性能。这可以通过使用带有 ``cudaEventDisableTiming`` 标志的 ``cudaEventCreateWithFlags()`` API 来实现。
 
-.. _sec:stream-priorities:
+.. _stream-priorities:
 
 3.1.3.1. 流优先级
 ^^^^^^^^^^^^^^^^^
@@ -173,7 +173,7 @@ CUDA 事件默认携带计时信息，因为它们可以在 ``cudaEventElapsedTi
    cudaStreamCreateWithPriority(&st_high, cudaStreamNonBlocking, greatestPriority));
    cudaStreamCreateWithPriority(&st_low, cudaStreamNonBlocking, leastPriority);
 
-.. _sec:explicit-synchronization:
+.. _explicit-synchronization:
 
 3.1.3.2. 显式同步
 ^^^^^^^^^^^^^^^^^
@@ -185,7 +185,7 @@ CUDA 事件默认携带计时信息，因为它们可以在 ``cudaEventElapsedTi
 - ``cudaStreamWaitEvent()`` 接受一个流和一个事件作为参数（参见 :ref:`CUDA 事件 <sec:cuda-events>` 了解事件的描述），使调用 ``cudaStreamWaitEvent()`` 后添加到给定流的所有命令延迟执行，直到给定事件完成。
 - ``cudaStreamQuery()`` 为应用程序提供一种了解流中所有先前命令是否已完成的方法。
 
-.. _sec:implicit-synchronization:
+.. _implicit-synchronization:
 
 3.1.3.3. 隐式同步
 ^^^^^^^^^^^^^^^^^
@@ -204,7 +204,7 @@ CUDA 事件默认携带计时信息，因为它们可以在 ``cudaEventElapsedTi
 - 所有独立操作应在依赖操作之前发出，
 - 任何类型的同步应尽可能延迟。
 
-.. _sec:programmatic-dependent-kernel-launch:
+.. _programmatic-dependent-kernel-launch:
 
 3.1.4. 程序化依赖 Kernel 启动
 -----------------------------
@@ -285,7 +285,7 @@ PDL 有三个主要组件：
    // the attribute
    cudaLaunchKernelEx(&config, secondary_kernel);
 
-.. _sec:batched-memory-transfers:
+.. _batched-memory-transfers:
 
 3.1.5. 批量内存传输
 -------------------
@@ -330,7 +330,7 @@ CUDA 开发中的一个常见模式是使用批处理技术。批处理是指我
 
 关于属性，在这个例子中传输是同构的。所以我们只使用一个属性，它将应用于所有传输。这由 attrIndex 参数控制。原则上，这可以是一个数组。数组的第 *i* 个元素包含属性数组的第 *i* 个元素适用的第一个传输的索引。在这种情况下，attrIndex 被视为单个元素数组，值为 '0' 意味着 ``attribute[0]`` 将应用于索引 0 及以上的所有传输，换句话说，所有传输。
 
-最后，我们注意到我们将 ``srcAccessOrder`` 属性设置为 ``cudaMemcpySrcAccessOrderStream``。这意味着源数据将按常规流顺序访问。换句话说，memcpy 将阻塞直到处理来自这些源指针和目标指针中任何一个的数据的先前 kernel 完成。
+最后，我们注意到我们将 ``srcAccessOrder`` 属性设置为 ``cudaMemcpySrcAccessOrderStream`` 。这意味着源数据将按常规流顺序访问。换句话说，memcpy 将阻塞直到处理来自这些源指针和目标指针中任何一个的数据的先前 kernel 完成。
 
 在下一个示例中，我们将考虑异构批量传输的更复杂情况。
 
@@ -369,13 +369,13 @@ CUDA 开发中的一个常见模式是使用批处理技术。批处理是指我
    cudaMemcpyBatchAsync(&dsts[0], &srcs[0], &sizes[0], batch_size,
        &attrs, &attrsIdxs, 2 /*numAttrs*/, nullptr /*failIdx*/, stream);
 
-这里我们有两种传输：``batch_size-10`` 次从页锁定主机内存到页锁定设备内存的传输，以及 10 次从主机数组到页锁定设备内存的传输。此外，buffer 数组不仅在主机上，而且只存在于当前作用域中——它的地址是所谓的 *临时指针*。此指针在 API 调用完成后可能无效（它是异步的）。要使用此类临时指针执行复制，属性中的 srcAccessOrder 必须设置为 cudaMemcpySrcAccessOrderDuringApiCall。
+这里我们有两种传输： ``batch_size-10`` 次从页锁定主机内存到页锁定设备内存的传输，以及 10 次从主机数组到页锁定设备内存的传输。此外，buffer 数组不仅在主机上，而且只存在于当前作用域中——它的地址是所谓的 *临时指针*。此指针在 API 调用完成后可能无效（它是异步的）。要使用此类临时指针执行复制，属性中的 srcAccessOrder 必须设置为 cudaMemcpySrcAccessOrderDuringApiCall。
 
 我们现在有两个属性，第一个应用于索引从 0 开始且小于 ``batch_size-10`` 的所有传输。第二个应用于索引从 ``batch_size-10`` 开始且小于 ``batch_size`` 的所有传输。
 
-如果我们不是从栈上分配 buffer 数组，而是使用 malloc 从堆上分配它，数据就不再是临时的。它将有效直到指针被显式释放。在这种情况下，如何暂存复制的最佳选择取决于系统是否有硬件管理内存或通过地址转换对主机内存的连贯 GPU 访问，这种情况下最好使用流排序，或者如果没有，那么立即暂存传输最有意义。在这种情况下，应该为属性的 ``srcAccessOrder`` 使用值 ``cudaMemcpyAccessOrderAny``。
+如果我们不是从栈上分配 buffer 数组，而是使用 malloc 从堆上分配它，数据就不再是临时的。它将有效直到指针被显式释放。在这种情况下，如何暂存复制的最佳选择取决于系统是否有硬件管理内存或通过地址转换对主机内存的连贯 GPU 访问，这种情况下最好使用流排序，或者如果没有，那么立即暂存传输最有意义。在这种情况下，应该为属性的 ``srcAccessOrder`` 使用值 ``cudaMemcpyAccessOrderAny`` 。
 
-``cudaMemcpyBatchAsync`` 函数还允许程序员提供关于源和目标位置的提示。这通过设置 ``cudaMemcpyAttributes`` 结构体的 ``srcLocation`` 和 ``dstLocation`` 字段来完成。``srcLocation`` 和 ``dstLocation`` 字段都是 ``cudaMemLocation`` 类型，这是一个包含位置类型和位置 ID 的结构体。这与在使用 ``cudaMemPrefetchAsync()`` 时可用于向运行时提供预取提示的 ``cudaMemLocation`` 结构体相同。我们在下面的代码示例中说明如何为从设备到主机特定 NUMA 节点的传输设置提示：
+``cudaMemcpyBatchAsync`` 函数还允许程序员提供关于源和目标位置的提示。这通过设置 ``cudaMemcpyAttributes`` 结构体的 ``srcLocation`` 和 ``dstLocation`` 字段来完成。 ``srcLocation`` 和 ``dstLocation`` 字段都是 ``cudaMemLocation`` 类型，这是一个包含位置类型和位置 ID 的结构体。这与在使用 ``cudaMemPrefetchAsync()`` 时可用于向运行时提供预取提示的 ``cudaMemLocation`` 结构体相同。我们在下面的代码示例中说明如何为从设备到主机特定 NUMA 节点的传输设置提示：
 
 .. _lst:batched-memory-location-hints:
 .. code-block:: cuda
@@ -421,7 +421,7 @@ CUDA 开发中的一个常见模式是使用批处理技术。批处理是指我
    cudaMemcpyBatchAsync(&dsts[0], &srcs[0], &sizes[0], batch_size,
        &attrs, &attrsIdxs, 1 /*numAttrs*/, nullptr /*failIdx*/, stream);
 
-最后要介绍的是提示我们是否希望使用 SM 还是 CE 进行传输的标志。此字段是 ``cudaMemcpyAttributesflags::flags``，可能的值是：
+最后要介绍的是提示我们是否希望使用 SM 还是 CE 进行传输的标志。此字段是 ``cudaMemcpyAttributesflags::flags`` ，可能的值是：
 
 - ``cudaMemcpyFlagDefault`` – 默认行为
 - ``cudaMemcpyFlagPreferOverlapWithCompute`` – 这提示系统应该优先使用 CE 进行传输，将传输与计算重叠。此标志在非 Tegra 平台上被忽略
@@ -432,7 +432,7 @@ CUDA 开发中的一个常见模式是使用批处理技术。批处理是指我
 - 除了源和目标指针以及传输大小外，该函数还可以接受一个或多个内存复制属性，提供关于正在传输的内存类型的信息、源指针的相应流排序行为、关于源和目标位置的提示，以及关于是否优先将传输与计算重叠（如果可能）或是否使用 SM 进行传输的提示。
 - 基于上述信息，运行时可以尝试最大限度地优化传输。
 
-.. _sec:environment-variables:
+.. _environment-variables:
 
 3.1.6. 环境变量
 ----------------

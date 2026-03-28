@@ -1,4 +1,4 @@
-.. _sec:cluster-launch-control:
+.. _cluster-launch-control:
 
 4.12. 使用 Cluster Launch Control 的工作窃取
 ==============================================
@@ -79,7 +79,7 @@
 
 注意，cluster launch control 操作被建模为异步代理操作（参见 :ref:`sec:async-thread-proxy` ）。
 
-.. _sec:thread-block-cancellation:
+.. _thread-block-cancellation:
 
 4.12.1.1. 线程块取消
 ~~~~~~~~~~~~~~~~~~~~
@@ -88,9 +88,9 @@
 
 取消过程涉及五个步骤：
 
-- **设置阶段**（步骤 1-2）：声明并初始化取消结果和同步变量。
+- **设置阶段** （步骤 1-2）：声明并初始化取消结果和同步变量。
 
-- **工作窃取循环**（步骤 3-5）：重复执行以请求、同步和处理取消结果。
+- **工作窃取循环** （步骤 3-5）：重复执行以请求、同步和处理取消结果。
 
 1. 声明线程块取消的变量：
 
@@ -148,7 +148,7 @@
 
 6. 确保异步代理和通用 `代理 <https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#proxies>`_ 之间共享内存操作的可见性，并防止工作窃取循环迭代之间的数据竞争。
 
-.. _sec:constraints-thread-block-cancellation:
+.. _constraints-thread-block-cancellation:
 
 4.12.1.2. 线程块取消的约束
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -204,7 +204,7 @@
 
 在以下小节中，我们通过向量-标量乘法 kernel 演示使用 cluster launch control 的工作窃取。我们展示了同一问题的两个变体：一个使用线程块，一个使用线程块集群。
 
-.. _sec:use-case-thread-blocks:
+.. _use-case-thread-blocks:
 
 4.12.2.1. 用例：线程块
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -317,7 +317,7 @@
 
      // 启动：kernel_cluster_launch_control<<<1024, (n + 1023) / 1024>>>(data, n);
 
-.. _sec:use-case-thread-block-clusters:
+.. _use-case-thread-block-clusters:
 
 4.12.2.2. 用例：线程块集群
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -326,7 +326,7 @@
 
 - 取消由单个集群线程提交。
 
-- 每个集群的线程块的共享内存结果将接收相同的（编码的）被取消线程块索引值（即，结果值被多播）。所有线程块接收的结果对应于集群内的本地块索引 ``{0, 0, 0}``。因此，集群内的线程块需要添加本地块索引。
+- 每个集群的线程块的共享内存结果将接收相同的（编码的）被取消线程块索引值（即，结果值被多播）。所有线程块接收的结果对应于集群内的本地块索引 ``{0, 0, 0}`` 。因此，集群内的线程块需要添加本地块索引。
 
 - 同步由每个集群的线程块使用本地 ``__shared__`` 内存屏障执行。屏障操作必须使用 ``ptx::scope_cluster`` 作用域执行。
 
