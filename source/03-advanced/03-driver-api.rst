@@ -314,6 +314,8 @@ Module 是设备代码和数据的动态可加载包，类似于 Windows 中的 
        float4 f4;
    } myStruct;
 
+.. _driver-api-interop-with-runtime: 
+
 3.3.4. Runtime 和 Driver API 之间的互操作性
 --------------------------------------------
 

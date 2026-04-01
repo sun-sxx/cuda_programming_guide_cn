@@ -1,21 +1,21 @@
 .. _error-log-management-details:
 
-错误日志管理
-=============
+4.8. 错误日志管理
+==========================
 
 错误日志管理（Error Log Management）机制允许 CUDA API 错误以通俗易懂的英语格式向开发者报告，描述问题的原因。
 
 .. _error-log-management-background:
 
-背景
-----
+4.8.1. 背景
+------------------
 
 传统上，CUDA API 调用失败的唯一指示是非零代码的返回。截至 CUDA Toolkit 12.9，CUDA Runtime 为错误条件定义了超过 100 种不同的返回代码，但其中许多是通用的，无法帮助开发者调试原因。
 
 .. _error-log-management-activation:
 
-激活
-----
+4.8.2. 激活
+------------------
 
 设置 ``CUDA_LOG_FILE`` 环境变量。可接受的值为 ``stdout``、``stderr`` 或系统中用于写入文件的有效路径。即使程序执行前未设置 ``CUDA_LOG_FILE`` ，也可以通过 API 转储日志缓冲区。
 
@@ -24,8 +24,8 @@
 
 .. _error-log-management-output:
 
-输出
-----
+4.8.3. 输出
+------------------
 
 日志按以下格式输出：
 
@@ -43,8 +43,8 @@
 
 .. _error-log-management-api-description:
 
-API 描述
---------
+4.8.4. API 描述
+----------------------
 
 CUDA Driver 提供两类 API 用于与错误日志管理功能交互。
 
@@ -97,8 +97,8 @@ flags 参数必须为 0，其他选项保留供未来 CUDA 版本使用。
 
 .. _error-log-management-limitations:
 
-限制和已知问题
---------------
+4.8.5. 限制和已知问题
+----------------------------
 
 #. 日志缓冲区限制为 100 条条目。达到此限制后，最旧的条目将被替换，日志转储将包含一条说明翻转的行。
 
