@@ -76,7 +76,7 @@
 
 - ``cudaDevAttrPageableMemoryAccessUsesHostPageTables`` - 指示 CPU/GPU 一致性的机制：1 表示硬件，0 表示软件
 
-:numref:`fig:unified-memory-flow-chart` 以图形方式展示了如何确定统一内存范式，后面跟着实现相同逻辑的 :ref:`代码示例 <sec:memory-unified-querying-code>`。
+:numref:`fig-unified-memory-flow-chart` 以图形方式展示了如何确定统一内存范式，后面跟着实现相同逻辑的 :ref:`代码示例 <sec:memory-unified-querying-code>`。
 
 统一内存操作有四种范式：
 
@@ -93,11 +93,11 @@
 .. figure:: /_static/images/unified-memory-explainer.png
    :align: center
    :alt: 统一内存范式流程图
-   :name: fig:unified-memory-flow-chart
+   :name: fig-unified-memory-flow-chart
 
    所有当前的 GPU 都使用统一虚拟地址空间并具有可用的统一内存。当 ``cudaDevAttrConcurrentManagedAccess`` 为 1 时，完整统一内存支持可用，否则只有有限支持可用。当完整支持可用时，如果 ``cudaDevAttrPageableMemoryAccess`` 也为 1，则所有系统内存都是统一内存。否则，只有使用 CUDA API（如 ``cudaMallocManaged`` ）分配的内存才是统一内存。当所有系统内存都是统一内存时， ``cudaDevAttrPageableMemoryAccessUsesHostPageTables`` 指示一致性是由硬件提供（值为 1 时）还是软件提供（值为 0 时）。
 
-:numref:`tab:unified-memory-levels` 以表格形式显示了与 :numref:`fig:unified-memory-flow-chart` 相同的信息，并附有指向本章相关部分和本指南后续部分更完整文档的链接。
+:numref:`tab:unified-memory-levels` 以表格形式显示了与 :numref:`fig-unified-memory-flow-chart` 相同的信息，并附有指向本章相关部分和本指南后续部分更完整文档的链接。
 
 .. list-table:: 统一内存范式概述
    :name: tab:unified-memory-levels
@@ -125,7 +125,7 @@
 2.4.2.1.1. 统一内存范式：代码示例
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-以下代码示例演示了查询设备属性并确定统一内存范式，遵循 :numref:`fig:unified-memory-flow-chart` 的逻辑，适用于系统中的每个 GPU。
+以下代码示例演示了查询设备属性并确定统一内存范式，遵循 :numref:`fig-unified-memory-flow-chart` 的逻辑，适用于系统中的每个 GPU。
 
 .. code-block:: cuda
    :caption: 查询统一内存范式
