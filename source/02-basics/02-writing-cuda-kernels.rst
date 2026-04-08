@@ -4,7 +4,7 @@
 ============================
 
 CUDA C++ kernels 在很大程度上可以像传统 CPU 代码那样编写。然而，GPU 有一些独特的特性可以用来提高性能。
-此外，了解 GPU 上的线程如何调度、如何访问内存以及执行如何进行，可以帮助开发者编写能够最大化利用可用计算资源的 kernels。
+此外，了解 GPU 上的线程如何调度、如何访问内存以及如何执行，可以帮助开发者编写能够最大化利用计算资源的 kernels。
 
 .. _writing-cuda-kernels-basics-of-simt:
 
@@ -21,7 +21,10 @@ SIMT 模型允许每个线程维护自己的状态和控制流。从功能角度
 2.2.2. 线程层次结构
 --------------------
 
-Threads 被组织成 thread blocks，然后被组织成 grid。Grids 可以是 1、2 或 3 维的，grid 的大小可以在 kernel 内使用 ``gridDim`` 内置变量查询。Thread blocks 也可以是 1、2 或 3 维的。Thread block 的大小可以在 kernel 内使用 ``blockDim`` 内置变量查询。Thread block 的索引可以使用 ``blockIdx`` 内置变量查询。在 thread block 内，thread 的索引使用 ``threadIdx`` 内置变量获取。这些内置变量用于为每个线程计算唯一的全局线程索引，从而使每个线程能够从全局内存加载/存储特定数据，并根据需要执行唯一的代码路径。
+Threads 被组织成 thread blocks，然后被组织成 grid。Grids 可以是 1、2 或 3 维的，grid 的大小可以在 kernel 内使用 ``gridDim`` 内置变量查询。
+Thread blocks 也可以是 1、2 或 3 维的。Thread block 的大小可以在 kernel 内使用 ``blockDim`` 内置变量查询。
+Thread block 的索引可以使用 ``blockIdx`` 内置变量查询。在 thread block 内，thread 的索引使用 ``threadIdx`` 内置变量获取。
+这些内置变量用于为每个线程计算唯一的全局线程索引，从而使每个线程能够从全局内存加载/存储特定数据，并根据需要执行特定的代码路径。
 
 - ``gridDim.[x|y|z]`` ：分别表示 grid 在 ``x``、``y`` 和 ``z`` 维度上的大小。这些值在 kernel 启动时设置。
 - ``blockDim.[x|y|z]`` ：分别表示 block 在 ``x``、``y`` 和 ``z`` 维度上的大小。这些值在 kernel 启动时设置。
@@ -174,7 +177,8 @@ Runtime 可以根据可用资源和 kernel 的需求自由做出决定。
 
    extern __shared__ float sharedArray[];
 
-需要注意的是，如果想要多个动态分配的共享内存数组，必须使用指针算术手动划分单个 ``extern __shared__`` 。例如，如果想要以下等效内容：
+需要注意的是，如果想要多个动态分配的共享内存数组，必须使用指针算术手动划分单个 ``extern __shared__`` 。
+例如，如果想要以下等效内容：
 
 .. code-block:: c++
 
@@ -209,7 +213,7 @@ Runtime 可以根据可用资源和 kernel 的需求自由做出决定。
 每个 SM 的寄存器数量和每个 thread block 的寄存器数量可以通过 GPU 的 ``regsPerMultiprocessor`` 和 ``regsPerBlock`` 设备属性查询。
 
 NVCC 允许开发者通过 ``-maxrregcount`` 选项 `指定 kernel 使用的最大寄存器数量 <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#maxrregcount-amount-maxrregcount>`_。
-使用此选项减少 kernel 可使用的寄存器数量可能会导致更多 thread blocks 在 SM 上并发调度，但也可能导致更多寄存器溢出。
+使用此选项减少 kernel 可使用的寄存器数量, 从而使更多 thread blocks 在 SM 上并发调度，但也增加了寄存器溢出的可能。
 
 .. _writing-cuda-kernels-local-memory:
 
