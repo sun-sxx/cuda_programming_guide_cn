@@ -36,9 +36,9 @@ CUDA 提供了一些功能和特性，旨在简化不同物理内存之间的数
 
 此外，这里还介绍了讨论统一内存和系统内存时使用的以下术语：
 
-- :ref:`异构托管内存 <memory-heterogeneous-memory-management>` (HMM) - Linux 内核的一项功能，为完整统一内存提供软件一致性
+- :ref:`异构托管内存 <memory-heterogeneous-memory-management>` (Heterogeneous Managed Memory, HMM) - Linux 内核的一项功能，为完整统一内存提供软件一致性
 
-- :ref:`地址转换服务 <memory-unified-address-translation-services>` (ATS) - 一种硬件功能，当 GPU 通过 NVLink 芯片到芯片 (C2C) 互连连接到 CPU 时可用，为完整统一内存提供硬件一致性
+- :ref:`地址转换服务 <memory-unified-address-translation-services>` (Address Translation Services, ATS) - 一种硬件功能，当 GPU 通过 NVLink 芯片到芯片 (C2C) 互连连接到 CPU 时可用，为完整统一内存提供硬件一致性
 
 .. _memory-unified-virtual-address-space:
 
@@ -109,22 +109,29 @@ CUDA 提供了一些功能和特性，旨在简化不同物理内存之间的数
 .. list-table:: 统一内存范式概述
    :name: tab:unified-memory-levels
    :header-rows: 1
-   :widths: 35 35 30
+   :widths: 20 30 50
 
    * - 统一内存范式
      - 设备属性
      - 完整文档
    * - :ref:`有限统一内存支持 <memory-limited-unified-memory-support>`
      - ``cudaDevAttrConcurrentManagedAccess`` 为 0
-     - :ref:`Windows、WSL 和 Tegra 上的统一内存 <um-legacy-devices>`
-   * - :ref:`显式托管内存分配的完整支持 <memory-unified-memory-full>`
-     - ``cudaDevAttrPageableMemoryAccess`` 为 0 且 ``cudaDevAttrConcurrentManagedAccess`` 为 1
+     - | :ref:`Windows、WSL 和 Tegra 上的统一内存 <um-legacy-devices>` ,
+       | `CUDA for Tegra Memory Management <https://docs.nvidia.com/cuda/cuda-for-tegra-appnote/index.html#memory-management>`_, 
+       | `Unified memory on Tegra <https://docs.nvidia.com/cuda/cuda-for-tegra-appnote/index.html#effective-usage-of-unified-memory-on-tegra>`_
+   * - :ref:`完整支持显式托管内存分配 <memory-unified-memory-full>`
+     - | ``cudaDevAttrPageableMemoryAccess`` 为 0 
+       | 且 ``cudaDevAttrConcurrentManagedAccess`` 为 1
      - :ref:`仅有 CUDA 托管内存支持的设备上的统一内存 <um-no-pageable-systems>`
-   * - :ref:`具有软件一致性的所有分配的完整支持 <memory-unified-memory-full>`
-     - ``cudaDevAttrPageableMemoryAccessUsesHostPageTables`` 为 0 且 ``cudaDevAttrPageableMemoryAccess`` 为 1 且 ``cudaDevAttrConcurrentManagedAccess`` 为 1
+   * - :ref:`完整支持具有软件一致性的分配 <memory-unified-memory-full>`
+     - | ``cudaDevAttrPageableMemoryAccessUsesHostPageTables`` 为 0
+       | 且 ``cudaDevAttrPageableMemoryAccess`` 为 1
+       | 且 ``cudaDevAttrConcurrentManagedAccess`` 为 1
      - :ref:`具有完整 CUDA 统一内存支持的设备上的统一内存 <um-pageable-systems>`
-   * - :ref:`具有硬件一致性的所有分配的完整支持 <memory-unified-address-translation-services>`
-     - ``cudaDevAttrPageableMemoryAccessUsesHostPageTables`` 为 1 且 ``cudaDevAttrPageableMemoryAccess`` 为 1 且 ``cudaDevAttrConcurrentManagedAccess`` 为 1
+   * - :ref:`完整支持具有硬件一致性的分配 <memory-unified-address-translation-services>`
+     - | ``cudaDevAttrPageableMemoryAccessUsesHostPageTables`` 为 1
+       | 且 ``cudaDevAttrPageableMemoryAccess`` 为 1 
+       | 且 ``cudaDevAttrConcurrentManagedAccess`` 为 1
      - :ref:`具有完整 CUDA 统一内存支持的设备上的统一内存 <um-pageable-systems>`
 
 .. _unified-memory-paradigm-code-example:
