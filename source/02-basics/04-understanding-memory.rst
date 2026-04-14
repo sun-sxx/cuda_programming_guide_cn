@@ -156,11 +156,17 @@ CUDA 提供了一些功能和特性，旨在简化不同物理内存之间的数
            int deviceId = i;
 
            int concurrentManagedAccess = -1;     
-           cudaDeviceGetAttribute (&concurrentManagedAccess, cudaDevAttrConcurrentManagedAccess, deviceId);    
+           cudaDeviceGetAttribute (&concurrentManagedAccess, 
+                                   cudaDevAttrConcurrentManagedAccess,
+                                   deviceId);    
            int pageableMemoryAccess = -1;
-           cudaDeviceGetAttribute (&pageableMemoryAccess, cudaDevAttrPageableMemoryAccess, deviceId);
+           cudaDeviceGetAttribute (&pageableMemoryAccess,
+                                   cudaDevAttrPageableMemoryAccess,
+                                   deviceId);
            int pageableMemoryAccessUsesHostPageTables = -1;
-           cudaDeviceGetAttribute (&pageableMemoryAccessUsesHostPageTables, cudaDevAttrPageableMemoryAccessUsesHostPageTables, deviceId);
+           cudaDeviceGetAttribute (&pageableMemoryAccessUsesHostPageTables,
+                                   cudaDevAttrPageableMemoryAccessUsesHostPageTables,
+                                   deviceId);
 
            printf("Device %d has ", deviceId);
            if(concurrentManagedAccess){
@@ -184,9 +190,11 @@ CUDA 提供了一些功能和特性，旨在简化不同物理内存之间的数
 2.4.2.2. 完整统一内存功能支持
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-大多数 Linux 系统都有完整的统一内存支持。如果设备属性 ``cudaDevAttrPageableMemoryAccess`` 为 1，则所有系统内存，无论是由 CUDA API 还是系统 API 分配，都以完整功能支持作为统一内存运行。这包括使用 ``mmap`` 创建的文件支持的内存分配。
+大多数 Linux 系统都有完整的统一内存支持。如果设备属性 ``cudaDevAttrPageableMemoryAccess`` 为 1，则所有系统内存，无论是由 CUDA API 还是系统 API 分配，都以完整功能支持作为统一内存运行。
+这包括使用 ``mmap`` 创建的文件支持的内存分配。
 
-如果 ``cudaDevAttrPageableMemoryAccess`` 为 0，则只有由 CUDA 分配为托管内存的内存才作为统一内存运行。使用系统 API 分配的内存不是托管的，也不一定可以从 GPU kernel 访问。
+如果 ``cudaDevAttrPageableMemoryAccess`` 为 0，则只有由 CUDA 分配为托管内存的内存才作为统一内存运行。
+使用系统 API 分配的内存不是托管的，也不一定可以从 GPU kernel 访问。
 
 通常，对于具有完整支持的统一分配：
 
@@ -198,14 +206,16 @@ CUDA 提供了一些功能和特性，旨在简化不同物理内存之间的数
 
 - 允许超额订阅：应用程序可以分配比 GPU 物理可用更多的托管内存
 
-分配和迁移行为可能偏离上述情况。程序员可以使用 :ref:`提示和预取 <memory-mem-advise-prefetch>` 来影响这些行为。完整统一内存支持的完整覆盖可以在 :ref:`具有完整 CUDA 统一内存支持的设备上的统一内存 <um-pageable-systems>` 中找到。
+分配和迁移行为可能偏离上述情况。程序员可以使用 :ref:`提示和预取 <memory-mem-advise-prefetch>` 来影响这些行为。
+完整统一内存支持的完整覆盖可以在 :ref:`具有完整 CUDA 统一内存支持的设备上的统一内存 <um-pageable-systems>` 中找到。
 
 .. _memory-unified-address-translation-services:
 
 2.4.2.2.1. 具有硬件一致性的完整统一内存
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-在 Grace Hopper 和 Grace Blackwell 等硬件上，使用 NVIDIA CPU 且 CPU 和 GPU 之间的互连是 NVLink 芯片到芯片 (C2C) 时，地址转换服务 (ATS) 可用。当 ATS 可用时， ``cudaDevAttrPageableMemoryAccessUsesHostPageTables`` 为 1。
+在 Grace Hopper 和 Grace Blackwell 等硬件上，使用 NVIDIA CPU 且 CPU 和 GPU 之间的互连是 NVLink 芯片到芯片 (C2C) 时，地址转换服务 (ATS) 可用。
+当 ATS 可用时， ``cudaDevAttrPageableMemoryAccessUsesHostPageTables`` 为 1。
 
 使用 ATS，除了对所有主机分配的完整统一内存支持外：
 
@@ -215,7 +225,9 @@ CUDA 提供了一些功能和特性，旨在简化不同物理内存之间的数
 
 - 硬件一致性支持可以提高性能，相比软件一致性
 
-ATS 提供 :ref:`HMM <memory-heterogeneous-memory-management>` 的所有功能。当 ATS 可用时，HMM 自动禁用。关于硬件与软件一致性的进一步讨论可在 :ref:`CPU 和 GPU 页表：硬件一致性与软件一致性 <um-hw-coherency>` 中找到。
+ATS 提供 :ref:`HMM <memory-heterogeneous-memory-management>`  （Heterogeneous Managed Memory）的所有功能。
+当 ATS 可用时，HMM 自动禁用。
+关于硬件与软件一致性的进一步讨论可在 :ref:`CPU 和 GPU 页表：硬件一致性与软件一致性 <um-hw-coherency>` 中找到。
 
 .. _memory-heterogeneous-memory-management:
 
