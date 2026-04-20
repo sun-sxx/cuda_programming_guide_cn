@@ -789,6 +789,296 @@ CUDA 提供了 C++ 标准库 (STL) 的实现，称为 `libcu++ <https://nvidia.g
    auto global_lambda = [] __host__ __device__ { }; // 不是扩展 lambda，因为它不是定义在
                                                     // __host__ 或 __host__ __device__ 函数内
 
+.. _extended-lambda-type-traits:
+
+5.3.7.3. 扩展 Lambda 类型特性
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+编译器提供类型特性来在编译时检测扩展 lambda 的闭包类型。
+
+.. code-block:: c++
+
+   bool __nv_is_extended_device_lambda_closure_type(type);
+
+如果 ``type`` 是为扩展 ``__device__`` lambda 创建的闭包类，则函数返回 ``true``，否则返回 ``false``。
+
+.. code-block:: c++
+
+   bool __nv_is_extended_device_lambda_with_preserved_return_type(type);
+
+如果 ``type`` 是为扩展 ``__device__`` lambda 创建的闭包类，并且 lambda 使用尾随返回类型定义，则函数返回 ``true``，否则返回 ``false``。如果尾随返回类型引用任何 lambda 参数名称，则返回类型不会被保留。
+
+.. code-block:: c++
+
+   bool __nv_is_extended_host_device_lambda_closure_type(type);
+
+如果 ``type`` 是为扩展 ``__host__ __device__`` lambda 创建的闭包类，则函数返回 ``true``，否则返回 ``false``。
+
+.. _extended-lambda-restrictions:
+
+5.3.7.4. 扩展 Lambda 限制
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+扩展 lambda 具有以下限制：
+
+1. **嵌套限制**：扩展 lambda 不能定义在另一个扩展 lambda 内部。
+
+2. **泛型 lambda 限制**：扩展 lambda 不能定义在泛型 lambda 内部。
+
+3. **封闭函数要求**：扩展 lambda 的封闭函数必须是具名的，并且其地址必须是可访问的。
+
+4. **主机 - 设备 lambda 限制**：``__host__ __device__`` 扩展 lambda 不能是泛型 lambda。
+
+5. **初始化捕获限制**：初始化捕获（init-capture）不支持 ``__host__ __device__`` 扩展 lambda。
+
+6. **模板参数限制**：扩展 lambda 不能用作模板模板参数的实参。
+
+7. **命名空间限制**：扩展 lambda 不能定义在命名空间作用域内。
+
+8. **constexpr 限制**：扩展 lambda 不能用于 constexpr 上下文。
+
+.. _host-device-lambda-optimization:
+
+5.3.7.5. 主机 - 设备 Lambda 优化注意事项
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+扩展 ``__host__ __device__`` lambda 在主机代码中使用间接函数调用，这可能会阻止内联优化。对于性能关键的代码，考虑使用单独的 ``__device__`` lambda 或 ``__host__`` lambda，而不是 ``__host__ __device__`` lambda。
+
+.. _this-capture-by-value:
+
+5.3.7.6. ``*this`` 按值捕获
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+C++17 的 ``*this`` 捕获模式复制对象而不是指针，避免在 GPU 代码中访问成员变量时出现问题：
+
+.. code-block:: c++
+
+   struct S {
+       int var = 10;
+       void method() {
+           auto lambda1 = [=, *this] __device__ {
+               return var + 1;  // 按值捕获对象
+           };
+       }
+   };
+
+.. _adl-with-extended-lambdas:
+
+5.3.7.7. 参数依赖查找 (ADL)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+扩展 lambda 可能导致额外的命名空间参与 ADL，可能导致函数解析歧义。在使用扩展 lambda 时应注意这一点。
+
+.. _polymorphic-function-wrappers:
+
+5.3.8. 多态函数包装器
+---------------------
+
+``nvfunctional`` 头文件提供 ``nvstd::function``，一个多态函数包装器，可在主机和设备代码中使用：
+
+.. code-block:: c++
+
+   #include <nvfunctional>
+
+   __device__ int device_function() { return 10; }
+
+   __global__ void kernel(int* result) {
+       nvstd::function<int()> fn1 = device_function;
+       nvstd::function<int()> fn2 = [](){ return 10; };
+       *result = fn1() + fn2();
+   }
+
+**无效情况：**
+
+- 主机 ``nvstd::function`` 不能用 ``__device__`` 函数初始化
+- 设备 ``nvstd::function`` 不能用 ``__host__`` 函数初始化
+- 不能在运行时在主机和设备之间传递 ``nvstd::function``
+
+.. _c-c-language-restrictions:
+
+5.3.9. C/C++ 语言限制
+---------------------
+
+.. _unsupported-features:
+
+5.3.9.1. 不支持的特性
+^^^^^^^^^^^^^^^^^^^^^
+
+以下 C++ 特性在设备代码中不支持：
+
+- RTTI（``typeid``、``dynamic_cast``）❌
+- 异常（``try/catch/throw``）❌
+- ``long double`` ❌
+- 三字符组 ❌
+
+.. _namespace-reservations:
+
+5.3.9.2. 命名空间保留
+^^^^^^^^^^^^^^^^^^^^^
+
+向 ``cuda::``、``nv::`` 或 ``cooperative_groups::`` 命名空间添加定义是未定义行为。
+
+.. _pointers-and-memory-addresses:
+
+5.3.9.3. 指针和内存地址
+^^^^^^^^^^^^^^^^^^^^^^^
+
+- 不能在主机上解引用设备内存指针
+- 不能在设备代码中解引用主机内存指针
+- 不能在主机代码中获取 ``__device__`` 函数的地址
+
+.. _variables:
+
+5.3.9.4. 变量
+^^^^^^^^^^^^^
+
+**局部变量：** 内存空间说明符（``__device__``、``__shared__`` 等）根据执行上下文受到限制。
+
+**``const`` 限定变量：** 设备代码不能引用或获取主机 ``const`` 变量的地址。改用 ``constexpr``。
+
+**``volatile`` 限定变量：** 不适用于线程间同步（使用原子操作）或 MMIO（使用 PTX）。
+
+**``static`` 变量：** 允许在设备代码中使用，但初始化受到限制。
+
+.. _functions:
+
+5.3.9.5. 函数
+^^^^^^^^^^^^^
+
+**递归：** ``__global__`` 函数不支持递归；``__device__`` 函数支持。
+
+**``__global__`` 函数参数：**
+
+- 不支持可变参数
+- 总大小限制为 32,764 字节
+- 不支持按引用传递
+- 不支持 ``std::initializer_list`` 参数
+- 不支持多态类参数
+
+.. _classes:
+
+5.3.9.6. 类
+^^^^^^^^^^^
+
+**多态类：** 在主机/设备之间复制是未定义行为。
+
+**数据成员：** 内存空间说明符不允许用于类数据成员。
+
+**函数成员：** ``__global__`` 函数不能是类成员。
+
+.. _templates:
+
+5.3.9.7. 模板
+^^^^^^^^^^^^^
+
+``__global__`` 函数模板参数的类型限制适用（不支持局部、未命名或私有类型）。
+
+.. _c-11-restrictions:
+
+5.3.10. C++11 限制
+------------------
+
+.. _inline-namespaces-restrictions:
+
+5.3.10.1. ``inline`` 命名空间
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+不能在内联命名空间和外围命名空间中定义同名的 ``__global__`` 函数或设备变量。
+
+.. _constexpr-functions-restrictions:
+
+5.3.10.3. ``constexpr`` 函数
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+默认情况下，不能从主机代码调用仅设备的 ``constexpr`` 或从设备代码调用仅主机的 ``constexpr``。使用 ``--expt-relaxed-constexpr`` 放宽此约束。
+
+.. _constexpr-variables:
+
+5.3.10.4. ``constexpr`` 变量
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+可用于设备代码中的标量类型和具有 ``constexpr`` 构造函数的类类型。不允许 ``constexpr __managed__`` 和 ``constexpr __shared__``。
+
+.. _defaulted-functions:
+
+5.3.10.6. 默认函数 ``= default``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+显式默认函数上的执行空间说明符被忽略（除非是外联或虚函数）。
+
+.. _c-14-restrictions:
+
+5.3.11. C++14 限制
+------------------
+
+.. _functions-with-deduced-return-type:
+
+5.3.11.1. 推导返回类型的函数
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- ``__global__`` 函数不能有推导返回类型 ``auto``
+- 返回类型内省不允许在主机代码中使用
+
+.. _variable-templates-restrictions:
+
+5.3.11.2. 变量模板
+^^^^^^^^^^^^^^^^^^
+
+``__device__`` 或 ``__constant__`` 变量模板在使用 Microsoft 编译器时不能是 ``const`` 限定的。
+
+.. _c-17-restrictions:
+
+5.3.12. C++17 限制
+------------------
+
+.. _inline-variables-restrictions:
+
+5.3.12.1. ``inline`` 变量
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+仅在分离编译模式下或对于具有内部链接的变量允许。
+
+.. _structured-binding-restrictions:
+
+5.3.12.2. 结构化绑定
+^^^^^^^^^^^^^^^^^^^^^
+
+不能用内存空间说明符（``__device__``、``__shared__`` 等）声明。
+
+.. _c-20-restrictions:
+
+5.3.13. C++20 限制
+------------------
+
+.. _three-way-comparison-operator:
+
+5.3.13.1. 三向比较运算符（``<=>``）
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+在设备代码中支持，但可能需要 ``--expt-relaxed-constexpr`` 标志和主机实现兼容性。
+
+.. code-block:: c++
+
+   struct S {
+       int x, y;
+       auto operator<=>(const S&) const = default;
+   };
+
+.. _consteval-functions:
+
+5.3.13.2. ``consteval`` 函数
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+可以从主机和设备代码独立调用，无论其执行空间如何：
+
+.. code-block:: c++
+
+   consteval int host_consteval() { return 10; }
+
+   __device__ int device_function() {
+       return host_consteval();  // 正确
+   }
+
 .. note::
 
    有关 C++ 语言支持的详细内容，请参考 `CUDA 官方文档 <https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/cpp-language-support.html>`_。

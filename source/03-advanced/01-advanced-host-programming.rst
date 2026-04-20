@@ -3,21 +3,27 @@
 3.1. 高级 CUDA API 和特性
 ==========================
 
-本节将介绍更高级的 CUDA API 和特性的使用。这些主题涵盖的技术或特性通常不需要修改 CUDA kernel，但仍可以从主机端影响应用级行为，包括 GPU 工作执行、性能以及 CPU 端性能。
+本节将介绍更高级的 CUDA API 和特性的使用。
+这些主题涵盖的技术或特性通常不需要修改 CUDA kernel，但仍可以从主机端影响应用级行为，包括 GPU 工作执行、性能以及 CPU 端性能。
 
 .. _cudalaunchkernelex:
 
 3.1.1. cudaLaunchKernelEx
 --------------------------
 
-当 CUDA 早期版本引入 :ref:`三重尖括号表示法 <sec:intro-cpp-launching-kernels-triple-chevron>` 时，kernel 的 :ref:`执行配置 <sec:execution-configuration>` 只有四个可编程参数：
+当 CUDA 早期版本引入 :ref:`三重尖括号表示法 <intro-cpp-launching-kernels-triple-chevron>` 时，kernel 的 :ref:`执行配置 <kernel-configuration>` 只有四个可编程参数：
 
 - 线程块维度
 - grid 维度
 - 动态共享内存（可选，未指定时为 0）
 - 流（未指定时使用默认流）
 
-一些 CUDA 特性可以从 kernel 启动时提供的额外属性和提示中受益。 ``cudaLaunchKernelEx`` 允许程序通过 ``cudaLaunchConfig_t`` 结构体设置上述执行配置参数。此外， ``cudaLaunchConfig_t`` 结构体还允许程序传入零个或多个 ``cudaLaunchAttributes`` 来控制或建议 kernel 启动的其他参数。例如，本章后面讨论的 ``cudaLaunchAttributePreferredSharedMemoryCarveout``（参见 :ref:`配置 L1/共享内存平衡 <sec:advanced-kernel-l1-shared-config>` ）就是使用 ``cudaLaunchKernelEx`` 指定的。本章后面讨论的 ``cudaLaunchAttributeClusterDimension`` 属性用于指定 kernel 启动所需的 cluster 大小。
+一些 CUDA 特性可以从 kernel 启动时提供的额外属性和提示中受益。 
+``cudaLaunchKernelEx`` 允许程序通过 ``cudaLaunchConfig_t`` 结构体设置上述执行配置参数。
+此外， ``cudaLaunchConfig_t`` 结构体还允许程序传入零个或多个 ``cudaLaunchAttributes`` 来控制或建议 kernel 启动的其他参数。
+例如，本章后面讨论的 ``cudaLaunchAttributePreferredSharedMemoryCarveout`` （参见 :ref:`配置 L1/共享内存平衡 <configuring-l1-shared-memory-balance>` ）
+就是使用 ``cudaLaunchKernelEx`` 指定的。
+本章后面讨论的 ``cudaLaunchAttributeClusterDimension`` 属性用于指定 kernel 启动所需的 cluster 大小。
 
 支持的属性完整列表及其含义请参阅 `CUDA Runtime API 参考文档 <https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html#group__CUDART__TYPES_1gfc5ed48085f05863b1aeebb14934b056>`_。
 
@@ -26,9 +32,12 @@
 3.1.2. 启动 Cluster
 --------------------
 
-:ref:`线程块 cluster <sec:programming-model-thread-block-clusters>` 在前面的章节中介绍过，是计算能力 9.0 及更高版本中可用的可选线程块组织级别，它使应用程序能够保证 cluster 中的线程块在单个 GPC 上同时执行。这使得比单个 SM 容量更大的线程组能够交换数据并相互同步。
+:ref:`线程块 cluster <thread-block-clusters>` 在前面的章节中介绍过，
+是计算能力 9.0 及更高版本中可用的可选线程块组织级别，它使应用程序能够保证 cluster 中的线程块在单个 GPC 上同时执行。
+这使得比单个 SM 容量更大的线程组能够交换数据并相互同步。
 
-:ref:`第 2.1.10.1 节 <sec:intro-cpp-launching-cluster-triple-chevron>` 展示了如何使用三重尖括号表示法指定和启动使用 cluster 的 kernel。在该节中，使用 ``__cluster_dims__`` 注解来指定用于启动 kernel 的 cluster 维度。使用三重尖括号表示法时，cluster 的大小是隐式确定的。
+:ref:`intro-cpp-launching-cluster-triple-chevron` 展示了如何使用三重尖括号表示法指定和启动使用 cluster 的 kernel。
+在该节中，使用 ``__cluster_dims__`` 注解来指定用于启动 kernel 的 cluster 维度。使用三重尖括号表示法时，cluster 的大小是隐式确定的。
 
 .. _launching-with-clusters-using-cudalaunchkernelex:
 
