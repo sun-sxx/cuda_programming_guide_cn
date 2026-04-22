@@ -15,7 +15,7 @@
 
 - *抢占*
 
-  GPU 调度器可以开始执行 :doc:`更高优先级的 kernel <../02-basics/asynchronous-execution>`，即使它是在较低优先级的 kernel 已经开始执行后才启动的，方法是在较低优先级的 kernel 的线程块完成时调度其线程块。然后，一旦高优先级的 kernel 完成执行，它就可以恢复执行较低优先级的 kernel。
+  GPU 调度器可以开始执行 :doc:`更高优先级的 kernel <03-asynchronous-execution>`，即使它是在较低优先级的 kernel 已经开始执行后才启动的，方法是在较低优先级的 kernel 的线程块完成时调度其线程块。然后，一旦高优先级的 kernel 完成执行，它就可以恢复执行较低优先级的 kernel。
 
 **固定线程块数量**：在这种方法中，通常实现为 block-stride 或 grid-stride 循环，线程块数量不依赖于问题规模。相反，每个线程块完成的工作量是问题规模的函数。通常，线程块数量基于执行 kernel 的 GPU 上的 SM 数量和所需的占用率。
 
@@ -69,7 +69,7 @@
 4.12.1. API 详情
 ----------------
 
-通过 cluster launch control API 取消线程块是异步完成的，并使用共享内存屏障进行同步，遵循与 :doc:`异步数据复制 <../03-advanced/advanced-kernel-programming>` 类似的编程模式。
+通过 cluster launch control API 取消线程块是异步完成的，并使用共享内存屏障进行同步，遵循与 :doc:`异步数据复制 <02-advanced-kernel-programming>` 类似的编程模式。
 
 该 API 通过 `libcu++ <https://nvidia.github.io/cccl/libcudacxx/ptx_api.html>`_ 提供，提供：
 

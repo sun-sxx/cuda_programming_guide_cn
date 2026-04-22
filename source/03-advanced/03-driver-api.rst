@@ -3,7 +3,7 @@
 3.3. CUDA Driver API
 ====================
 
-本指南前面的章节介绍了 CUDA runtime。如 :ref:`cuda-platform-driver-and-runtime` 中所述，CUDA runtime 是在较低级别的 CUDA driver API 之上构建的。本节介绍 CUDA runtime 和 driver API 之间的一些区别，以及如何混合使用它们。大多数应用程序无需与 CUDA driver API 交互即可达到最佳性能。但是，新接口有时会更早地在 driver API 中提供，而一些高级接口（如 :doc:`../04-special-topics/virtual-memory-management` ）仅在 driver API 中公开。
+本指南前面的章节介绍了 CUDA runtime。如 :ref:`cuda-platform-driver-and-runtime` 中所述，CUDA runtime 是在较低级别的 CUDA driver API 之上构建的。本节介绍 CUDA runtime 和 driver API 之间的一些区别，以及如何混合使用它们。大多数应用程序无需与 CUDA driver API 交互即可达到最佳性能。但是，新接口有时会更早地在 driver API 中提供，而一些高级接口（如 :doc:`../04-special-topics/16-virtual-memory-management` ）仅在 driver API 中公开。
 
 Driver API 在 `cuda` 动态库（`cuda.dll` 或 `cuda.so` ）中实现，该库在安装设备驱动程序时复制到系统中。其所有入口点都以 `cu` 为前缀。
 

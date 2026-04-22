@@ -11,7 +11,7 @@ Green Context 支持最初通过 `CUDA Driver API <https://docs.nvidia.com/cuda/
 
 随着 Green Contexts 在运行时中的暴露，强烈建议直接使用 CUDA 运行时 API。本节也将仅使用 CUDA 运行时 API。
 
-本节其余部分组织如下：`动机/何时使用`_ 提供示例，`Green Contexts：易用性`_ 突出易用性，`Green Contexts：设备资源和描述符`_ 介绍设备资源和资源描述符结构体。`Green Context 创建示例`_ 解释如何创建 Green Context，`Green Contexts：启动工作`_ 介绍如何启动针对它的工作，`Green Contexts：API`_ 突出一些额外的 Green Context API。最后，`Green Contexts：示例`_ 总结示例。
+本节其余部分组织如下：:ref:`green-contexts-motivation` 提供示例，:ref:`green-contexts-ease-of-use` 突出易用性，:ref:`green-contexts-device-resource-and-desc` 介绍设备资源和资源描述符结构体。:ref:`green-contexts-creation-example` 解释如何创建 Green Context，:ref:`green-contexts-launching-work` 介绍如何启动针对它的工作，:ref:`green-contexts-apis` 突出一些额外的 Green Context API。最后，:ref:`green-contexts-example` 总结示例。
 
 .. _green-contexts-motivation:
 
@@ -34,7 +34,7 @@ Green Context 支持最初通过 `CUDA Driver API <https://docs.nvidia.com/cuda/
 
 **Green Contexts 与 MIG 或 MPS 的比较**
 
-为了完整起见，本节简要比较 Green Contexts 与另外两种资源分配机制：`MIG（多实例 GPU）<https://docs.nvidia.com/datacenter/tesla/mig-user-guide/index.html>`_ 和 `MPS（多进程服务）<https://docs.nvidia.com/deploy/mps/index.html>`_。
+为了完整起见，本节简要比较 Green Contexts 与另外两种资源分配机制：`MIG（多实例 GPU） <https://docs.nvidia.com/datacenter/tesla/mig-user-guide/index.html>`_ 和 `MPS（多进程服务） <https://docs.nvidia.com/deploy/mps/index.html>`_。
 
 MIG 将支持 MIG 的 GPU 静态划分为多个 MIG 实例（"较小的 GPU"）。这种分配必须在启动应用程序之前完成，不同的应用程序可以使用不同的 MIG 实例。使用 MIG 对于应用程序持续未充分利用可用 GPU 资源的用户可能有益；随着 GPU 变得更大，这个问题更加明显。使用 MIG，用户可以在不同的 MIG 实例上运行这些不同的应用程序，从而提高 GPU 利用率。MIG 对云服务提供商 (CSP) 具有吸引力，不仅因为对这些应用程序提高了 GPU 利用率，还因为它可以在不同 MIG 实例上运行的客户端之间提供服务质量 (QoS) 和隔离。
 

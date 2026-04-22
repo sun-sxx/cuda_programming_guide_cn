@@ -276,7 +276,7 @@ CUDA 支持 Bfloat16、半精度、单精度、双精度和四精度浮点数据
      - ✅
      - 内建，数学函数需要 ``<crt/device_fp128_functions.h>``
 
-CUDA 还支持 `TensorFloat-32 <https://blogs.nvidia.com/blog/tensorfloat-32-precision-format/>`__（``TF32``）、`微缩放（MX）<https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf>`__ 浮点类型和其他 `低精度数值格式 <https://resources.nvidia.com/en-us-blackwell-architecture>`__，这些不用于通用计算，而是用于涉及张量核心的专用目的。这些包括 4、6 和 8 位浮点类型。有关更多详细信息，请参阅 `CUDA Math API <https://docs.nvidia.com/cuda/cuda-math-api/cuda_math_api/structs.html>`__。
+CUDA 还支持 `TensorFloat-32 <https://blogs.nvidia.com/blog/tensorfloat-32-precision-format/>`__（``TF32``）、`微缩放（MX） <https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf>`__ 浮点类型和其他 `低精度数值格式 <https://resources.nvidia.com/en-us-blackwell-architecture>`__，这些不用于通用计算，而是用于涉及张量核心的专用目的。这些包括 4、6 和 8 位浮点类型。有关更多详细信息，请参阅 `CUDA Math API <https://docs.nvidia.com/cuda/cuda-math-api/cuda_math_api/structs.html>`__。
 
 .. list-table:: 支持的浮点类型属性
    :header-rows: 1
@@ -315,7 +315,7 @@ CUDA 还支持 `TensorFloat-32 <https://blogs.nvidia.com/blog/tensorfloat-32-pre
 
 .. hint::
 
-   `CUDA C++ 标准库 <cpp-language-support.html#cpp-standard-library>`__ 在 ``<cuda/std/limits>`` 头文件中提供 ``cuda::std::numeric_limits`` 来查询支持的浮点类型的属性和范围，包括`微缩放格式（MX）<https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf>`__。有关可查询属性的列表，请参阅 `C++ 参考 <https://en.cppreference.com/w/cpp/types/numeric_limits.html>`__。
+   `CUDA C++ 标准库 <cpp-language-support.html#cpp-standard-library>`__ 在 ``<cuda/std/limits>`` 头文件中提供 ``cuda::std::numeric_limits`` 来查询支持的浮点类型的属性和范围，包括 `微缩放格式（MX） <https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf>`__。有关可查询属性的列表，请参阅 `C++ 参考 <https://en.cppreference.com/w/cpp/types/numeric_limits.html>`__。
 
 **复数支持：**
 
@@ -392,4 +392,4 @@ C 和 C++ 都允许以十进制或十六进制表示法表示浮点值。`C99 <h
 
 .. note::
 
-   有关浮点计算的详细内容，请参考 `CUDA 官方文档 <https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/mathematical-functions.html>`_。
+   有关浮点计算的详细内容，请参考 `CUDA 官方文档 <https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/mathematical-functions.html>`__。

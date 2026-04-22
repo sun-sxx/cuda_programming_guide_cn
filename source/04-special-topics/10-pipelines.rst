@@ -1,4 +1,4 @@
-.. _pipelines:
+.. _pipelines-details:
 
 4.10. Pipelines
 ================

@@ -1,7 +1,7 @@
 .. _um-details:
 
 4.1. 统一内存
-=============
+============
 
 本节详细解释每种可用统一内存范式的行为和使用方法。:doc:`../02-basics/04-understanding-memory` 展示了如何确定应用哪种统一内存范式，并简要介绍了每种范式。
 
@@ -12,9 +12,9 @@
 - 完全支持所有分配的硬件一致性
 - 有限的统一内存支持
 
-前三种涉及完全统一内存支持的范式具有非常相似的行为和编程模型，并在 `um-full-support`_ 中涵盖，任何差异都会突出显示。
+前三种涉及完全统一内存支持的范式具有非常相似的行为和编程模型，并在 :ref:`um-pageable-systems` 中涵盖，任何差异都会突出显示。
 
-最后一种统一内存支持受限的范式在 `um-windows-wsl-tegra`_ 中详细讨论。
+最后一种统一内存支持受限的范式在 :ref:`um-legacy-devices` 中详细讨论。
 
 .. _um-pageable-systems:
 
@@ -31,7 +31,7 @@ Linux HMM 需要 Linux 内核版本 6.1.24+、6.2.11+ 或 6.3+，计算能力 7.
 
 硬件一致性系统（如 NVIDIA Grace Hopper）为 CPU 和 GPU 提供逻辑上组合的页表，参见 :ref:`um-hw-coherency` 。以下部分仅适用于硬件一致性系统：
 
-- `um-access-counters`_
+- :ref:`um-perf-hints`
 
 4.1.1.1. 统一内存：深入示例
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -199,7 +199,7 @@ Linux HMM 需要 Linux 内核版本 6.1.24+、6.2.11+ 或 6.3+，计算能力 7.
      ASSERT(close(fd) == 0, "Cannot close file");
    }
 
-注意，在不具有 ``hostNativeAtomicSupported`` 属性的系统上（参见 `um-host-native-atomics`_），包括启用了 Linux HMM 的系统，不支持对文件支持的内存进行原子访问。
+注意，在不具有 ``hostNativeAtomicSupported`` 属性的系统上，包括启用了 Linux HMM 的系统，不支持对文件支持的内存进行原子访问。
 
 4.1.1.1.2. 使用统一内存的进程间通信 (IPC)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -210,7 +210,7 @@ Linux HMM 需要 Linux 内核版本 6.1.24+、6.2.11+ 或 6.3+，计算能力 7.
 
 许多应用程序更喜欢为每个 GPU 管理一个进程，但仍需要使用统一内存（例如用于超额订阅），并从多个 GPU 访问它。
 
-CUDA IPC（参见 :doc:`15-inter-process-communication`）不支持托管内存：此类内存的句柄不能通过本节讨论的任何机制共享。在具有完整 CUDA 统一内存支持的系统上，系统分配的内存支持 IPC。一旦与其他进程共享了对系统分配内存的访问，就适用相同的编程模型，类似于 `um-file-backed`_。
+CUDA IPC（参见 :doc:`15-inter-process-communication`）不支持托管内存：此类内存的句柄不能通过本节讨论的任何机制共享。在具有完整 CUDA 统一内存支持的系统上，系统分配的内存支持 IPC。一旦与其他进程共享了对系统分配内存的访问，就适用相同的编程模型。
 
 有关在 Linux 下创建 IPC 支持的系统分配内存的各种方法的更多信息，请参阅以下参考资料：
 
@@ -470,13 +470,13 @@ CUDA 统一内存支持主机和设备线程可用的所有原子操作，使所
 .. [#f5] GPU 驻留内存的页大小可能会在未来的 CUDA 版本中演变。
 .. [#f6] 目前，在将内存迁移到 GPU 或通过首次触摸将其放置在 GPU 上时，可能不会保持大页大小。
 
-表 `um-allocator-table`_ 显示了几种可用于分配可同时从多个处理器（包括主机和设备）访问的数据的分配器的语义差异。有关 ``cudaMemPoolCreate`` 的更多详细信息，请参阅 `内存池 <stream-ordered-memory-allocation.html#stream-ordered-memory-pools>`_ 部分，有关 ``cuMemCreate`` 的更多详细信息，请参阅 `虚拟内存管理 <virtual-memory-management.html#virtual-memory-management>`_ 部分。
+表 :ref:`um-perf-hints` 显示了几种可用于分配可同时从多个处理器（包括主机和设备）访问的数据的分配器的语义差异。有关 ``cudaMemPoolCreate`` 的更多详细信息，请参阅 `内存池 <stream-ordered-memory-allocation.html#stream-ordered-memory-pools>`_ 部分，有关 ``cuMemCreate`` 的更多详细信息，请参阅 `虚拟内存管理 <virtual-memory-management.html#virtual-memory-management>`_ 部分。
 
 在硬件一致性系统上，设备内存作为 NUMA 域暴露给系统，可以使用特殊的分配器（如 ``numa_alloc_on_node``）将内存固定到给定的 NUMA 节点（主机或设备）。此内存可从主机和设备访问，且不迁移。类似地，``mbind`` 可用于将内存固定到给定的 NUMA 节点，并可使文件支持的内存首次访问之前放置在给定的 NUMA 节点上。
 
 以下适用于共享内存的分配器：
 
-- 系统分配器（如 ``mmap``）允许使用 ``MAP_SHARED`` 标志在进程之间共享内存。这在 CUDA 中受支持，可用于在同一主机连接的不同设备之间共享内存。但是，目前不支持在多个主机以及多个设备之间共享内存。有关详细信息，请参阅 `um-ipc`_。
+- 系统分配器（如 ``mmap``）允许使用 ``MAP_SHARED`` 标志在进程之间共享内存。这在 CUDA 中受支持，可用于在同一主机连接的不同设备之间共享内存。但是，目前不支持在多个主机以及多个设备之间共享内存。
 - 对于在多个主机上通过网络访问统一内存或其他 CUDA 内存，请咨询所用通信库的文档，例如 `NCCL <https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/index.html>`_、`NVSHMEM <https://docs.nvidia.com/nvshmem/api/index.html>`_、`OpenMPI <https://www.open-mpi.org/faq/?category=runcuda>`_、`UCX <https://docs.mellanox.com/category/hpcx>`_ 等。
 
 4.1.1.2.7. 访问计数器迁移
@@ -630,14 +630,14 @@ CUDA 统一内存支持主机和设备线程可用的所有原子操作，使所
 4.1.2. 仅支持 CUDA 托管内存的设备上的统一内存
 -------------------------------------------------
 
-对于具有 6.x 或更高计算能力但没有分页内存访问的设备（参见表 `统一内存范式概述 <../02-basics/04-understanding-memory.html#table-unified-memory-levels>`_），CUDA 托管内存完全支持且一致，但 GPU 无法访问系统分配的内存。统一内存的编程模型和性能调优与 `um-full-support`_ 节中描述的模型非常相似，但明显的例外是系统分配器不能用于分配内存。因此，以下子节列表不适用：
+对于具有 6.x 或更高计算能力但没有分页内存访问的设备（参见表 `统一内存范式概述 <../02-basics/04-understanding-memory.html#table-unified-memory-levels>`_），CUDA 托管内存完全支持且一致，但 GPU 无法访问系统分配的内存。统一内存的编程模型和性能调优与 :ref:`um-pageable-systems` 节中描述的模型非常相似，但明显的例外是系统分配器不能用于分配内存。因此，以下子节列表不适用：
 
-- `um-system-allocator`_
+- 系统分配器
 - :ref:`um-hw-coherency`
-- `um-atomics`_
-- `um-access-counters`_
-- `um-traffic-hd`_
-- `um-async-access`_
+- 原子操作
+- :ref:`um-perf-hints`
+- 流量 hints
+- 异步访问
 
 .. _um-legacy-devices:
 

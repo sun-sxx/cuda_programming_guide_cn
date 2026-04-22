@@ -3,7 +3,7 @@
 4.19. CUDA 与图形 API 互操作
 ============================
 
-在 CUDA 中直接访问 API 的 GPU 数据可以读取和写入带有 CUDA 核函数的数据，从而提供 CUDA 功能，同时从其他 API 使用它们。主要有两个概念：直接方法，`图形互操作性`_ 与 OpenGL 和 Direct3D[9-11] 使得可以将资源从 OpenGL 和 Direct3D 映射到 CUDA 地址空间；以及更灵活的 `外部资源互操作性`_，其中可以通过导入和导出操作系统级句柄来访问内存和同步对象。这支持以下 API：Direct3D[11-12]、Vulkan 和 NVIDIA 软件通信接口互操作性。
+在 CUDA 中直接访问 API 的 GPU 数据可以读取和写入带有 CUDA 核函数的数据，从而提供 CUDA 功能，同时从其他 API 使用它们。主要有两个概念：直接方法，:ref:`graphics-interoperability` 与 OpenGL 和 Direct3D[9-11] 使得可以将资源从 OpenGL 和 Direct3D 映射到 CUDA 地址空间；以及更灵活的 :ref:`external-resource-interoperability`，其中可以通过导入和导出操作系统级句柄来访问内存和同步对象。这支持以下 API：Direct3D[11-12]、Vulkan 和 NVIDIA 软件通信接口互操作性。
 
 .. _graphics-interoperability:
 

@@ -501,7 +501,7 @@ GPU 标识符的提供方式如下：
 
 该环境变量指定一个位置，当支持的 CUDA API 调用返回错误时，将在该位置打印描述性错误日志消息。
 
-例如，如果尝试使用无效的网格配置启动内核，例如 ``kernel<<<1, dim3(1,1,128)>>>(...)`` ，则该内核将无法启动， ``cudaGetLastError()`` 将返回通用的 ``invalid configuration argument`` 错误。如果设置了 ``CUDA_LOG_FILE`` 环境变量，用户可以在日志中看到以下描述性错误消息： ``[CUDA][E] Block Dimensions (1,1,128) include one or more values that exceed the device limit of (1024,1024,64)`` ，并轻松确定指定的块的 z 维度无效。有关更多详细信息，请参阅 :doc:`../04-special-topics/error-log-management`。
+例如，如果尝试使用无效的网格配置启动内核，例如 ``kernel<<<1, dim3(1,1,128)>>>(...)`` ，则该内核将无法启动， ``cudaGetLastError()`` 将返回通用的 ``invalid configuration argument`` 错误。如果设置了 ``CUDA_LOG_FILE`` 环境变量，用户可以在日志中看到以下描述性错误消息： ``[CUDA][E] Block Dimensions (1,1,128) include one or more values that exceed the device limit of (1024,1024,64)`` ，并轻松确定指定的块的 z 维度无效。有关更多详细信息，请参阅 :doc:`08-error-log-management`。
 
 **可选值**： ``stdout``、``stderr`` 或有效文件路径（具有适当的访问权限）
 
