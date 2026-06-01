@@ -3,43 +3,54 @@
 3.4. 多 GPU 系统编程
 =====================
 
-多 GPU 编程允许应用程序利用多 GPU 系统提供的更大聚合算术性能、内存容量和内存带宽，从而处理单 GPU 无法企及的问题规模并实现更高的性能水平。
+多 GPU 编程允许应用程序去处理更大规模的问题，并实现单张 GPU 无法企及的性能水平。
+这是通过利用多 GPU 系统所提供的更大的聚合计算性能、内存容量以及内存带宽来实现的。
 
-CUDA 通过主机 API、驱动程序基础设施和支持的 GPU 硬件技术实现多 GPU 编程：
+CUDA 通过主机端 API、驱动架构以及配套的 GPU 硬件技术，实现了多 GPU 编程。
 
-- 主机线程 CUDA 上下文管理
-- 系统中所有处理器的统一内存寻址
-- GPU 之间的点对点批量内存传输
-- 细粒度点对点 GPU 加载/存储内存访问
-- 更高级别的抽象和支持系统软件，如 CUDA 进程间通信、使用 `NCCL <https://developer.nvidia.com/nccl>`_ 的并行归约，以及使用 NVLink 和/或 GPU-Direct RDMA 与 `NVSHMEM <https://developer.nvidia.com/nvshmem>`_ 和 MPI 等 API 进行通信
+- 主机线程的 CUDA 上下文管理
+- 系统内所有处理器的统一内存寻址
+- GPU 之间的点对点（Peer-to-peer）批量内存传输
+- 细粒度的 GPU 间点对点加载/存储（load/store）内存访问
+- 更高层级的抽象与支持性的系统软件，如 CUDA 进程间通信、使用 `NCCL <https://developer.nvidia.com/nccl>`_ 的并行归约，
+  以及通过 NVLink 和/或 GPU-Direct RDMA 进行的通信（配合 `NVSHMEM <https://developer.nvidia.com/nvshmem>`_  和 MPI 等 API 使用）。
 
-在最基本的层面上，多 GPU 编程要求应用程序同时管理多个活动的 CUDA 上下文，将数据分发到 GPU，在 GPU 上启动 kernel 以完成工作，并通信或收集结果以便应用程序可以对其进行处理。具体的实现方式取决于如何将应用程序的算法、可用的并行性和现有代码结构最有效地映射到合适的多 GPU 编程方法。一些最常见的多 GPU 编程方法包括：
+在最基础的层面上，多 GPU 编程要求应用程序能够同时管理多个活跃的 CUDA contexts ，将数据分发到各个 GPU 上，在 GPU 上启动核函数来完成计算任务，并进行通信或收集结果，以便应用程序对这些结果进行后续处理。
+具体如何实现这些步骤，取决于如何将应用程序的算法、可用的并行度以及现有的代码结构，以最有效的方式映射到合适的多 GPU 编程方法上。
+一些最常见的多 GPU 编程方法包括：
+
 
 - 单个主机线程驱动多个 GPU
-- 多个主机线程，每个线程驱动自己的 GPU
-- 多个单线程主机进程，每个进程驱动自己的 GPU
-- 多个主机进程包含多个线程，每个线程驱动自己的 GPU
-- 多节点 NVLink 连接集群，GPU 由跨集群节点在多个操作系统实例中运行的线程和进程驱动
+- 多个主机线程，每个线程各自驱动一个 GPU
+- 多个单线程的主机进程，每个进程各自驱动一个 GPU
+- 包含多个线程的多个主机进程，每个线程各自驱动一个 GPU
+- 通过 NVLink 互联的多节点集群，其中的 GPU 由运行在集群各节点上、跨越多个操作系统实例的线程和进程来驱动
 
-GPU 可以通过设备内存之间的内存传输和对等访问相互通信，涵盖上述每种多设备工作分发方法。通过查询和启用点对点 GPU 内存访问的使用，并利用 NVLink 实现高带宽传输和设备之间更细粒度的加载/存储操作，支持高性能、低延迟的 GPU 通信。
+GPU 可以通过设备内存之间的数据传输和对等访问互相通信，这涵盖了上述列出的所有多设备工作分配方法。
+通过查询并启用 GPU 间的对等内存访问功能，并利用 NVLink 来实现设备间的高带宽传输以及更细粒度的加载/存储操作，系统可以支持高性能、低延迟的 GPU 通信。
 
-CUDA 统一虚拟寻址允许同一主机进程内的多个 GPU 之间以最少的额外步骤进行通信，以查询和启用高性能点对点内存访问和传输（例如通过 NVLink）。
+CUDA 的统一虚拟寻址（Unified Virtual Addressing）允许同一主机进程内的多个 GPU 之间进行通信，
+查询和启用高性能的对等内存访问与传输（例如通过 NVLink）只需极少的额外步骤
 
-由不同主机进程管理的多个 GPU 之间的通信通过使用进程间通信（IPC）和虚拟内存管理（VMM）API 支持。高级 IPC 概念和节点内 CUDA IPC API 的介绍在 :ref:`interprocess-communication` 节中讨论。高级虚拟内存管理（VMM）API 支持节点内和多节点 IPC，可在 Linux 和 Windows 操作系统上使用，并允许对内存缓冲区的 IPC 共享进行按分配粒度的控制，如 :ref:`virtual-memory-management` 中所述。
+通过进程间通信 (IPC) 和虚拟内存管理 (VMM) API，可以支持由不同主机进程管理的多个 GPU 之间的通信。
+高级 IPC 概念以及节点内 CUDA IPC API 将在 :ref:`进程间通信 <interprocess-communication>` 部分进行讨论。
+高级虚拟内存管理 (VMM) API 不仅支持节点内，还支持多节点间的 IPC；它们适用于 Linux 和 Windows 操作系统，
+并允许对内存缓冲区的 IPC 共享进行按分配粒度的精细控制，具体细节见 :ref:`virtual-memory-management` 部分。
 
-CUDA 本身提供了在一组 GPU 中实现集合操作所需的 API，可能包括主机，但它本身不提供高级多 GPU 集合 API。多 GPU 集合由更高级别的 CUDA 通信库提供，如 `NCCL <https://developer.nvidia.com/nccl>`_ 和 `NVSHMEM <https://developer.nvidia.com/nvshmem>`_。
+CUDA 本身提供了在一组 GPU（大概还包括 CPU）内部实现集合操作（ collective operations ）所需的底层 API，但它并没有提供更高层的多 GPU 集合操作 API。
+多 GPU 的集合通信操作是由更高级的抽象通信库（例如 `NCCL <https://developer.nvidia.com/nccl>`_ 和 `NVSHMEM <https://developer.nvidia.com/nvshmem>`_ ）来提供的。
 
 .. _multi-gpu-context-execution:
 
-多设备上下文和执行管理
-----------------------
+3.4.1. 多设备上下文和执行管理
+------------------------------
 
 应用程序使用多个 GPU 所需的第一步是枚举可用的 GPU 设备，根据其硬件属性、CPU 亲和性和与对等设备的连接性在可用设备中进行适当选择，并为应用程序将使用的每个设备创建 CUDA 上下文。
 
 .. _multi-gpu-device-enumeration:
 
-设备枚举
-~~~~~~~~
+3.4.1.1. 设备枚举
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 以下代码示例展示了如何查询支持 CUDA 的设备数量、枚举每个设备并查询其属性。
 
@@ -57,8 +68,8 @@ CUDA 本身提供了在一组 GPU 中实现集合操作所需的 API，可能包
 
 .. _multi-gpu-device-selection:
 
-设备选择
-~~~~~~~~
+3.4.1.2. 设备选择
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 主机线程可以随时通过调用 ``cudaSetDevice()`` 设置其当前操作的设备。设备内存分配和 kernel 启动在当前设备上进行；流和事件在与当前设置的设备关联时创建。在主机线程调用 ``cudaSetDevice()`` 之前，当前设备默认为设备 0。
 
@@ -79,8 +90,8 @@ CUDA 本身提供了在一组 GPU 中实现集合操作所需的 API，可能包
 
 .. _multi-gpu-stream-and-event-behavior:
 
-多设备流、事件和内存复制行为
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+3.4.1.3. 多设备流、事件和内存复制行为
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 如果 kernel 启动到与当前设备不关联的流中，则会失败，如下面的代码示例所示。
 
@@ -113,13 +124,13 @@ CUDA 本身提供了在一组 GPU 中实现集合操作所需的 API，可能包
 
 .. _multi-gpu-peer-memory-access:
 
-多设备点对点传输和内存访问
---------------------------
+3.4.2. 多设备点对点传输和内存访问
+-------------------------------------
 
 .. _multi-gpu-peer-to-peer-transfers:
 
-点对点内存传输
-~~~~~~~~~~~~~~
+3.4.2.1. 点对点内存传输
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 CUDA 可以在设备之间执行内存传输，并在可能进行点对点内存访问时利用专用复制引擎和 NVLink 硬件来最大化性能。
 
@@ -156,8 +167,8 @@ CUDA 可以在设备之间执行内存传输，并在可能进行点对点内存
 
 .. _multi-gpu-peer-to-peer-memory-access:
 
-点对点内存访问
-~~~~~~~~~~~~~~
+3.4.2.2. 点对点内存访问
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 根据系统属性，特别是 PCIe 和/或 NVLink 拓扑，设备能够寻址彼此的内存（即，在一个设备上执行的 kernel 可以解引用指向另一个设备内存的指针）。如果 ``cudaDeviceCanAccessPeer()`` 对指定设备返回 true，则两个设备之间支持点对点内存访问。
 
@@ -189,8 +200,8 @@ CUDA 可以在设备之间执行内存传输，并在可能进行点对点内存
 
 .. _multi-gpu-peer-to-peer-memory-consistency-synchronization:
 
-点对点内存一致性
-~~~~~~~~~~~~~~~~
+3.4.2.3. 点对点内存一致性
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 必须使用同步操作来强制执行跨多个设备分布的网格中并发执行线程对内存访问的顺序和正确性。跨设备同步的线程在 ``thread_scope_system`` `同步作用域 <https://nvidia.github.io/cccl/libcudacxx/extended_api/memory_model.html#thread-scopes>`_ 下操作。类似地，内存操作属于 ``thread_scope_system`` `内存同步域 <https://docs.nvidia.com/cuda/cuda-c-programming-guide/#memory-synchronization-domains>`_。
 
@@ -198,15 +209,15 @@ CUDA 可以在设备之间执行内存传输，并在可能进行点对点内存
 
 .. _multi-gpu-managed-memory:
 
-多设备托管内存
-~~~~~~~~~~~~~~
+3.4.2.4. 多设备托管内存
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 托管内存可在支持点对点的多 GPU 系统上使用。并发多设备托管内存访问的详细要求以及 GPU 独占访问托管内存的 API 在 :ref:`多 GPU <sec:um-legacy-multi-gpu>` 中描述。
 
 .. _multi-gpu-host-iommu-acs-vm:
 
-主机 IOMMU 硬件、PCI 访问控制服务和虚拟机
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+3.4.2.5. 主机 IOMMU 硬件、PCI 访问控制服务和虚拟机
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 在 Linux 上，CUDA 和显示驱动程序不支持启用 IOMMU 的裸机 PCIe 点对点内存传输。但是，CUDA 和显示驱动程序确实支持通过虚拟机直通使用 IOMMU。在裸机系统上运行 Linux 时，必须禁用 IOMMU 以防止设备内存静默损坏。相反，对于虚拟机，应启用 IOMMU 并使用 VFIO 驱动程序进行 PCIe 直通。
 

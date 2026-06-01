@@ -171,6 +171,92 @@ CUDA 编程模型和 SIMT 表示线程束中的所有线程一起推进代码。
    因此，SIMT 没有像 SIMD 那样的固定数据宽度。
    有关 SIMT 的更详细讨论，请参见 :ref:`simt-execution-model`。
 
+.. _programming-model-tile:
+
+1.2.2.3. CUDA 中的 Tile 编程
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+除了前面章节描述的 SIMT 模型外，CUDA 还支持 Tile 编程模型。
+在 Tile 编程中，程序员在整个线程块的级别编写代码，描述对称为 **tile** 的多维数据集合的操作。
+编译器将这些操作映射到线程块的各个线程。
+
+Tile kernel 在线程块网格上启动，如 :ref:`thread-blocks-and-grids` 部分所述。
+每个 block 执行 tile kernel，并可以查询其在网格中的位置以确定其负责的数据部分。
+程序员仅指定网格维度；每个 block 的线程数由编译器根据 kernel 中的 tile 操作确定（:numref:`fig-tile-programming-abstraction`）。
+
+.. _fig-tile-programming-abstraction:
+.. figure:: /_static/images/tile-simt.png
+   :alt: SIMT 和 Tile 编程模型中程序员的视角
+   :width: 80%
+
+   SIMT 和 Tile 编程模型中程序员的视角。在 SIMT 中，程序员编写每线程代码并控制每个线程如何访问数据。
+   在 Tile 编程中，程序员编写每 block 代码，对 tile 进行操作；编译器将操作映射到 block 的线程。
+
+在 tile kernel 中，block 执行单个控制流。
+程序员指定对 tile 的操作，编译器将工作分发到 block 的各个线程。
+支持标准的控制流构造（如条件语句和循环），但由于 block 遵循单个控制流，因此不存在线程束分化的概念。
+标量操作（如计算索引或循环边界）由 block 的单个线程执行。
+Tile 操作（如逐元素相加两个 tile）由 block 的所有线程并行执行。
+
+重要的是不要将 block（执行单元）与 tile（数据单元）混淆。
+单个 block 可以创建和操作许多不同形状和数据类型的 tile。
+
+
+.. _tile-arrays-and-tiles:
+
+1.2.2.3.1. 数组和 Tile
+"""""""""""""""""""""""
+
+Tile kernel 使用两种类型的数据： **数组** 和 **tile**。
+数组（或全局数组）是存储在设备内存中的多维元素容器。
+数组是可变的：其内容可以通过 kernel 中的存储操作修改。数组具有形状和数据类型。
+
+Tile 是仅存在于 tile 代码中且仅限于单个 block 的多维值集合。
+Tile 是不可变的：对 tile 的每次操作都会生成新的 tile，而不是修改现有的 tile。
+与数组不同，tile 不一定在内存中有表示——编译器决定 tile 数据的存储方式，可以使用寄存器、共享内存或 SM 的其他资源。
+Tile 的每个维度必须是 2 的幂，并且必须在编译时已知（即其值必须在 kernel 执行之前确定，而不是在执行期间计算）。
+Tile 不能作为 kernel 参数传递；它们完全在 tile 代码中创建和使用。
+
+
+1.2.2.3.2. Tile 空间和数据移动
+"""""""""""""""""""""""""""""""""
+
+数据通过加载和存储操作在数组和 tile 之间移动。
+这些操作使用一个称为 **tile 空间** 的概念，它是将数组概念性地分区为大小相等、不重叠的 tile 的结果。
+例如，考虑形状为 (M, N) 的二维数组。
+如果加载操作指定 tile 形状为 (tm, tn)，则数组被概念性地划分为 :math:`\lceil M/t_m \rceil` 行和 :math:`\lceil N/t_n \rceil` 列的 tile。
+此 tile 空间中的索引（如 (i, j)）标识要加载的 tile。
+加载返回形状为 (tm, tn) 的 tile，包含数组中对应的元素。
+当 tile 超出数组边界时（例如在数组维度不是 tile 维度的精确倍数时的边缘处），由加载指定如何处理越界元素，例如用零填充（ :numref:`fig-tile-space-data-movement` ）。
+
+.. _fig-tile-space-data-movement:
+.. figure:: /_static/images/tile-data-movement.png
+   :alt: Tile 空间和数据移动
+   :width: 80%
+
+   Tile 空间和数据移动。
+   形状为 (M, N) 的二维数组被概念性地分区为形状为 (tm, tn) 的 tile 网格。
+   tile 空间索引 (i, j) 处的加载返回对应的 tile。
+   在数组边界处，落在数组外的元素可以用零填充。
+   存储将 tile 写回到给定 tile 空间索引处的数组。
+
+存储操作执行相反的操作：给定一个 tile 和 tile 空间中的索引，它将 tile 的元素写入数组的对应区域。
+落在数组边界外的任何写入都被静默丢弃。
+Tile 程序还支持 gather 和 scatter 操作，可以从数组中的任意位置加载或存储。
+
+
+1.2.2.3.3. Tile 上的操作
+"""""""""""""""""""""""""
+
+Tile 程序提供一组作用于 tile 的内建操作，包括逐元素算术、矩阵乘法、沿一个或多个轴的归约（如求和和最大值）、形状操作（如 reshape 和转置）以及类型转换。当两个不同形状的 tile 在一个操作中组合时，较小的 tile 会自动扩展以匹配较大的 tile，然后再应用操作。
+
+
+1.2.2.3.4. 与 SIMT 编程的关系
+"""""""""""""""""""""""""""""""
+
+Tile 编程和 SIMT 编程在 CUDA 中共存。应用程序可以同时包含 SIMT 和 tile kernel，两种类型的 kernel 都可以在设备内存中对相同数据进行操作。编程模型的选择是每个 kernel 的决策。Tile 编程不替代 SIMT 编程。SIMT 提供对单个线程的细粒度控制，这对于某些算法和优化技术仍然是必要的。Tile 编程提供更高层次的抽象，可以简化 kernel 开发。由于线程级决策留给编译器，相同的 tile kernel 可以在不同的 GPU 架构上运行而无需更改源代码。两种模型都构建在前面章节描述的相同底层硬件（SM、线程块和网格）之上。两种模型也使用相同的设备内存空间，这些将在下一节中介绍。
+
+
 .. _gpu-memory:
 
 1.2.3. GPU 内存

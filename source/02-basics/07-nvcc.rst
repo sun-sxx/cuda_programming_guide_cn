@@ -1,6 +1,6 @@
 .. _nvcc:
 
-2.5. NVCC：NVIDIA CUDA 编译器
+2.7. NVCC：NVIDIA CUDA 编译器
 =============================
 
 `NVIDIA CUDA 编译器 <https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html>`_ ``nvcc`` 是 NVIDIA 提供的工具链，
@@ -16,7 +16,7 @@
 
 .. _nvcc-source-files:
 
-2.5.1. CUDA 源文件和头文件
+2.7.1. CUDA 源文件和头文件
 --------------------------
 
 使用 ``nvcc`` 编译的源文件可以包含主机代码（在 CPU 上执行）和设备代码（在 GPU 上执行）的组合。
@@ -47,7 +47,7 @@
 
 .. _nvcc-compilation-workflow:
 
-2.5.2. NVCC 编译工作流程
+2.7.2. NVCC 编译工作流程
 -------------------------
 
 在初始阶段， ``nvcc`` 将设备代码与主机代码分离，并分别将其编译分派给 GPU 编译器和主机编译器。
@@ -109,7 +109,7 @@ GPU 编译器将 C/C++ 设备代码编译为 PTX 汇编代码。GPU 编译器会
 
 .. _nvcc-basic-usage:
 
-2.5.3. NVCC 基本用法
+2.7.3. NVCC 基本用法
 ---------------------
 
 使用 ``nvcc`` 编译 CUDA 源文件的基本命令是：
@@ -126,7 +126,7 @@ GPU 编译器将 C/C++ 设备代码编译为 PTX 汇编代码。GPU 编译器会
 
 .. _nvcc-ptx-cubin-generation:
 
-2.5.3.1. NVCC PTX 和 Cubin 生成
+2.7.3.1. NVCC PTX 和 Cubin 生成
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 默认情况下， ``nvcc`` 为 CUDA Toolkit 支持的最早 GPU 架构（最低的 ``compute_XY`` 和 ``sm_XY`` 版本）生成 PTX 和 Cubin，以最大化兼容性。
@@ -178,7 +178,7 @@ GPU 编译器将 C/C++ 设备代码编译为 PTX 汇编代码。GPU 编译器会
 
 .. _host-code-compilation-notes:
 
-2.5.3.2. 主机代码编译注意事项
+2.7.3.2. 主机代码编译注意事项
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 不包含设备代码或符号的编译单元（即源文件及其头文件）可以直接使用主机编译器编译。
@@ -199,7 +199,7 @@ CUDA 运行时同时提供静态库和共享库，分别为 ``libcudart_static``
 
 .. _nvcc-separate-compilation:
 
-2.5.3.3. GPU 代码的分离编译
+2.7.3.3. GPU 代码的分离编译
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``nvcc`` 默认采用 **全程序编译** （whole-program compilation），期望所有 GPU 代码和符号都存在于使用它们的编译单元中。
@@ -252,7 +252,7 @@ CUDA 设备函数可以调用在其他编译单元中定义的设备函数或访
 
 .. _common-compiler-options:
 
-2.5.4. 常用编译器选项
+2.7.4. 常用编译器选项
 ---------------------
 
 本节介绍可与 ``nvcc`` 一起使用的最相关的编译器选项，涵盖语言特性、优化、调试、分析和构建方面。
@@ -260,7 +260,7 @@ CUDA 设备函数可以调用在其他编译单元中定义的设备函数或访
 
 .. _language-features:
 
-2.5.4.1. 语言特性
+2.7.4.1. 语言特性
 ^^^^^^^^^^^^^^^^^
 
 ``nvcc`` 支持 C++ 核心语言特性，从 C++03 到 `C++20 <https://en.cppreference.com/w/cpp/compiler_support#cpp20>`_。可以使用 ``-std`` 标志指定要使用的语言标准：
@@ -279,7 +279,7 @@ CUDA 设备函数可以调用在其他编译单元中定义的设备函数或访
 
 .. _debugging-options:
 
-2.5.4.2. 调试选项
+2.7.4.2. 调试选项
 ^^^^^^^^^^^^^^^^^
 
 ``nvcc`` 支持以下选项来生成调试信息：
@@ -295,7 +295,7 @@ CUDA 设备函数可以调用在其他编译单元中定义的设备函数或访
 
 .. _optimization-options:
 
-2.5.4.3. 优化选项
+2.7.4.3. 优化选项
 ^^^^^^^^^^^^^^^^^
 
 ``nvcc`` 提供了许多用于优化性能的选项。本节旨在简要介绍开发人员可能发现有用的一些选项，并提供进一步信息的链接。
@@ -322,7 +322,7 @@ CUDA 设备函数可以调用在其他编译单元中定义的设备函数或访
 
 .. _nvcc-link-time-optimization:
 
-2.5.4.4. 链接时优化（LTO）
+2.7.4.4. 链接时优化（LTO）
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 :ref:`nvcc-separate-compilation` 可能比全程序编译性能更低，因为跨文件优化机会有限。
@@ -342,7 +342,7 @@ CUDA 设备函数可以调用在其他编译单元中定义的设备函数或访
 
 .. _profiling-options:
 
-2.5.4.5. 分析选项
+2.7.4.5. 分析选项
 ^^^^^^^^^^^^^^^^^
 
 可以使用 `Nsight Compute <https://developer.nvidia.com/nsight-compute>`_ 和 `Nsight Systems <https://developer.nvidia.com/nsight-systems>`_ 工具直接分析 CUDA 应用程序，
@@ -355,7 +355,7 @@ CUDA 设备函数可以调用在其他编译单元中定义的设备函数或访
 
 .. _fatbin-compression:
 
-2.5.4.6. Fatbin 压缩
+2.7.4.6. Fatbin 压缩
 ^^^^^^^^^^^^^^^^^^^^
 
 ``nvcc`` 默认压缩存储在应用程序或库二进制文件中的 :ref:`fatbins <cubins-and-fatbins>`。
@@ -369,7 +369,7 @@ CUDA 设备函数可以调用在其他编译单元中定义的设备函数或访
 
 .. _compiler-performance-controls:
 
-2.5.4.7. 编译器性能控制
+2.7.4.7. 编译器性能控制
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 ``nvcc`` 提供用于分析和加速编译过程本身的选项：
