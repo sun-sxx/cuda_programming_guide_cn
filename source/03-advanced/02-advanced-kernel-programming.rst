@@ -455,6 +455,8 @@ CUDA 编程模型通过 ``cuda::std::barrier`` 提供异步屏障，这是 `libc
      - 否
      - ``cuda::barrier``
 
+.. _advanced-kernels-sync-time-division:
+
 3.2.4.2.1. 同步的时间分割
 """""""""""""""""""""""""""""""
 
