@@ -31,7 +31,7 @@
 
 .. _fig-cluster-launch-control:
 
-.. figure:: ../_static/images/cluster_launch_control.png
+.. figure:: /_static/images/cluster_launch_control.png
    :alt: Cluster Launch Control Flow
    :align: center
 
