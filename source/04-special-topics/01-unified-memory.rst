@@ -3,8 +3,8 @@
 4.1. 统一内存
 =============
 
-本节将详细解释当前可用的各种统一内存（Unified Memory）范式的具体行为与使用方法。
-前面关于 :ref:`memory-unified-memory` 的章节已经介绍了如何判断适用哪种统一内存范式，并对每种范式进行了简要介绍。
+本节将详细解释当前可用的各种统一内存（Unified Memory）范式的行为与用法。
+前面 :ref:`memory-unified-memory` 已经介绍了如何判断适用哪种统一内存范式，并对每种范式进行了简要介绍。
 
 如前所述，统一内存编程共有四种范式：
 
@@ -19,133 +19,143 @@
 
 .. _um-pageable-systems:
 
-4.1.1. 完整支持的 CUDA 统一内存
+4.1.1. 支持完整 CUDA 统一内存的设备上的统一内存
 --------------------------------------------------------
 
-这些系统包括硬件一致性内存系统，如 NVIDIA Grace Hopper 和启用了异构内存管理 (HMM) 的现代 Linux 系统。HMM 是一种基于软件的内存管理系统，提供与硬件一致性内存系统相同的编程模型。
+这些系统包括硬件一致性内存系统，如 NVIDIA Grace Hopper 和启用了异构内存管理 (Heterogeneous Memory Management, HMM) 的现代 Linux 系统。
+HMM 是一种基于软件的内存管理系统，提供与硬件一致性内存系统相同的编程模型。
 
-Linux HMM 需要 Linux 内核版本 6.1.24+、6.2.11+ 或 6.3+，计算能力 7.5 或更高的设备，以及安装了 `Open Kernel Modules <https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#nvidia-open-gpu-kernel-modules>`_ 的 CUDA 驱动程序版本 535+。
+Linux HMM 需要 Linux 内核版本 6.1.24+、6.2.11+ 或 6.3+，计算能力 7.5 或更高的设备，
+以及安装了 `Open Kernel Modules <https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#nvidia-open-gpu-kernel-modules>`_ 的 CUDA 驱动程序版本 535+。
 
 .. note::
 
-   我们将 CPU 和 GPU 组合页表的系统称为 *硬件一致性* 系统。CPU 和 GPU 具有单独页表的系统称为 *软件一致性* 系统。
+   我们将 CPU 和 GPU 共用同一张页表的系统称为 **硬件一致性系统** （hardware coherent systems）。
+   而将 CPU 和 GPU 使用各自独立页表的系统称为 **软件一致性系统** （software-coherent）。
 
-硬件一致性系统（如 NVIDIA Grace Hopper）为 CPU 和 GPU 提供逻辑上组合的页表，参见 :ref:`um-hw-coherency` 。以下部分仅适用于硬件一致性系统：
+诸如 NVIDIA Grace Hopper 这类硬件一致性系统，为 CPU 和 GPU 提供了逻辑上统一的页表（详情请参阅 :ref:`um-hw-coherency` ）。
+以下章节仅适用于硬件一致性系统：
 
-- `um-access-counters`_
+- :ref:`um-access-counter-migration`
 
 .. _um-details-intro:
 
-4.1.1.1. 统一内存：深入示例
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+4.1.1.1. 统一内存：深度案例解析
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-具有完整 CUDA 统一内存支持的系统（参见表 `统一内存范式概述 <../02-basics/04-understanding-memory.html#table-unified-memory-levels>`_）允许设备访问与其交互的主机进程拥有的任何内存。
+支持完整 CUDA 统一内存的系统，详见 :ref:`tab:unified-memory-levels` ，允许设备访问与其交互的主机进程拥有的任何内存。
 
-本节展示了几个高级用例，使用一个简单地将输入字符数组的前 8 个字符打印到标准输出流的核函数：
+本节将展示几个高级用例。这些用例使用了一个简单 kernel ，其功能仅仅是将输入字符数组的前 8 个字符打印到标准输出流中：
 
 .. code-block:: cuda
 
    __global__ void kernel(const char* type, const char* data) {
      static const int n_char = 8;
      printf("%s - first %d characters: '", type, n_char);
-     for (int i = 0; i < n_char; ++i) printf("%c", data[i]);
+     for (int i = 0; i < n_char; ++i) {
+       printf("%c", data[i]);
+     }
      printf("'\n");
    }
 
-以下展示了如何使用系统分配的内存调用此核函数的各种方式：
+以下选项卡展示了使用系统分配内存调用该 kernel 的多种方式：
 
-.. dropdown:: Malloc
+.. tab-set::
 
-   .. code-block:: c++
+   .. tab-item:: Malloc
 
-      void test_malloc() {
-        const char test_string[] = "Hello World";
-        char* heap_data = (char*)malloc(sizeof(test_string));
-        strncpy(heap_data, test_string, sizeof(test_string));
-        kernel<<<1, 1>>>("malloc", heap_data);
-        ASSERT(cudaDeviceSynchronize() == cudaSuccess,
-          "CUDA failed with '%s'", cudaGetErrorString(cudaGetLastError()));
-        free(heap_data);
-      }
+      .. code-block:: c++
 
-.. dropdown:: Managed
+         void test_malloc() {
+           const char test_string[] = "Hello World";
+           char* heap_data = (char*)malloc(sizeof(test_string));
+           strncpy(heap_data, test_string, sizeof(test_string));
+           kernel<<<1, 1>>>("malloc", heap_data);
+           ASSERT(cudaDeviceSynchronize() == cudaSuccess,
+             "CUDA failed with '%s'", cudaGetErrorString(cudaGetLastError()));
+           free(heap_data);
+         }
 
-   .. code-block:: c++
+   .. tab-item:: Managed
 
-      void test_managed() {
-        const char test_string[] = "Hello World";
-        char* data;
-        cudaMallocManaged(&data, sizeof(test_string));
-        strncpy(data, test_string, sizeof(test_string));
-        kernel<<<1, 1>>>("managed", data);
-        ASSERT(cudaDeviceSynchronize() == cudaSuccess,
-          "CUDA failed with '%s'", cudaGetErrorString(cudaGetLastError()));
-        cudaFree(data);
-      }
+      .. code-block:: c++
 
-.. dropdown:: 栈变量
+         void test_managed() {
+           const char test_string[] = "Hello World";
+           char* data;
+           cudaMallocManaged(&data, sizeof(test_string));
+           strncpy(data, test_string, sizeof(test_string));
+           kernel<<<1, 1>>>("managed", data);
+           ASSERT(cudaDeviceSynchronize() == cudaSuccess,
+             "CUDA failed with '%s'", cudaGetErrorString(cudaGetLastError()));
+           cudaFree(data);
+         }
 
-   .. code-block:: c++
+   .. tab-item:: 栈变量
 
-      void test_stack() {
-        const char test_string[] = "Hello World";
-        kernel<<<1, 1>>>("stack", test_string);
-        ASSERT(cudaDeviceSynchronize() == cudaSuccess,
-          "CUDA failed with '%s'", cudaGetErrorString(cudaGetLastError()));
-      }
+      .. code-block:: c++
 
-.. dropdown:: 文件作用域静态变量
+         void test_stack() {
+           const char test_string[] = "Hello World";
+           kernel<<<1, 1>>>("stack", test_string);
+           ASSERT(cudaDeviceSynchronize() == cudaSuccess,
+             "CUDA failed with '%s'", cudaGetErrorString(cudaGetLastError()));
+         }
 
-   .. code-block:: c++
+   .. tab-item:: 文件作用域静态变量
 
-      void test_static() {
-        static const char test_string[] = "Hello World";
-        kernel<<<1, 1>>>("static", test_string);
-        ASSERT(cudaDeviceSynchronize() == cudaSuccess,
-          "CUDA failed with '%s'", cudaGetErrorString(cudaGetLastError()));
-      }
+      .. code-block:: c++
 
-.. dropdown:: 全局作用域变量
+          void test_static() {
+           static const char test_string[] = "Hello World";
+           kernel<<<1, 1>>>("static", test_string);
+           ASSERT(cudaDeviceSynchronize() == cudaSuccess,
+             "CUDA failed with '%s'", cudaGetErrorString(cudaGetLastError()));
+         }
 
-   .. code-block:: c++
+   .. tab-item:: 全局作用域变量
+ 
+      .. code-block:: c++
 
-      const char global_string[] = "Hello World";
+         const char global_string[] = "Hello World";
 
-      void test_global() {
-        kernel<<<1, 1>>>("global", global_string);
-        ASSERT(cudaDeviceSynchronize() == cudaSuccess,
-          "CUDA failed with '%s'", cudaGetErrorString(cudaGetLastError()));
-      }
+         void test_global() {
+           kernel<<<1, 1>>>("global", global_string);
+           ASSERT(cudaDeviceSynchronize() == cudaSuccess,
+             "CUDA failed with '%s'", cudaGetErrorString(cudaGetLastError()));
+         }
 
-.. dropdown:: 全局作用域 extern 变量
+   .. tab-item:: 全局作用域 extern 变量
 
-   .. code-block:: c++
+      .. code-block:: c++
 
-      // declared in separate file, see below
-      extern char* ext_data;
+         // declared in separate file, see below
+         extern char* ext_data;
 
-      void test_ext_extern() {
-        kernel<<<1, 1>>>("extern", ext_data);
-        ASSERT(cudaDeviceSynchronize() == cudaSuccess,
-          "CUDA failed with '%s'", cudaGetErrorString(cudaGetLastError()));
-      }
+         void test_ext_extern() {
+           kernel<<<1, 1>>>("extern", ext_data);
+           ASSERT(cudaDeviceSynchronize() == cudaSuccess,
+             "CUDA failed with '%s'", cudaGetErrorString(cudaGetLastError()));
+         }
 
-      /** This may be a non-CUDA file */
-      char* ext_data;
-      static const char global_string[] = "Hello World";
+         /** This may be a non-CUDA file */
+         char* ext_data;
+         static const char global_string[] = "Hello World";
 
-      void __attribute__ ((constructor)) setup(void) {
-        ext_data = (char*)malloc(sizeof(global_string));
-        strncpy(ext_data, global_string, sizeof(global_string));
-      }
+         void __attribute__ ((constructor)) setup(void) {
+           ext_data = (char*)malloc(sizeof(global_string));
+           strncpy(ext_data, global_string, sizeof(global_string));
+         }
 
-      void __attribute__ ((destructor)) tear_down(void) {
-        free(ext_data);
-      }
+         void __attribute__ ((destructor)) tear_down(void) {
+           free(ext_data);
+         }
 
-注意，对于 extern 变量，它可以由第三方库声明和管理其内存，而该库完全不与 CUDA 交互。
+请注意，对于 extern 变量，其声明、内存的所有权及管理可能完全由第三方库负责，而该第三方库根本不会与 CUDA 发生任何交互。
 
-还需注意，栈变量以及文件作用域和全局作用域的变量只能通过指针被 GPU 访问。在这个具体示例中，这很方便，因为字符数组已经声明为指针： ``const char*`` 。然而，考虑以下具有全局作用域整数的示例：
+另外需要注意的是，GPU 只能通过 **指针** 来访问栈变量（stack variables）以及文件作用域（file-scope）和全局作用域（global-scope）的变量。
+在这个特定的示例中，这恰好非常方便，因为字符数组本身已经被声明为了指针类型（ ``const char*`` ）。
+不过，请考虑以下使用全局整型变量的示例：
 
 .. code-block:: c++
 
@@ -169,16 +179,18 @@ Linux HMM 需要 Linux 内核版本 6.1.24+、6.2.11+ 或 6.3+，计算能力 7.
      return 0;
    }
 
-在上面的示例中，我们需要确保将 *指针* 传递给核函数，而不是直接在核函数中访问全局变量。这是因为没有 ``__managed__`` 说明符的全局变量默认声明为仅 ``__host__`` ，因此大多数编译器目前不允许在设备代码中直接使用这些变量。
+在上述示例中，我们需要确保将指向该全局变量的 **指针** 传递给 kernel ，而不是在 kernel 中直接访问该全局变量。
+这是因为没有使用 ``__managed__`` 修饰符的全局变量默认被声明为仅限主机端（ ``__host__`` -only），因此就目前而言，大多数编译器不允许在设备代码中直接使用这些变量。
 
 .. _um-file-backed-memory:
 
-4.1.1.1.1. 文件支持的统一内存
+4.1.1.1.1. 基于文件的统一内存
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-由于具有完整 CUDA 统一内存支持的系统允许设备访问主机进程拥有的任何内存，它们可以直接访问文件支持的内存。
+由于支持完整 CUDA 统一内存的系统允许设备访问宿主进程所拥有的任意内存，因此它们可以直接访问基于文件的内存。
 
-这里，我们修改了上一节中展示的初始示例，使用文件支持的内存从 GPU 打印字符串，直接从输入文件读取。在以下示例中，内存由物理文件支持，但该示例也适用于内存支持的文件。
+这里，我们对上一节中的初始示例进行了修改，使其使用基于文件的内存，以便 GPU 能够直接从输入文件中读取并打印字符串。
+在下面的示例中，该内存由物理文件提供支持（backed），但该示例同样适用于以内存为支撑的文件（memory-backed files）。
 
 .. code-block:: c++
 
@@ -204,7 +216,7 @@ Linux HMM 需要 Linux 内核版本 6.1.24+、6.2.11+ 或 6.3+，计算能力 7.
      ASSERT(close(fd) == 0, "Cannot close file");
    }
 
-注意，在不具有 ``hostNativeAtomicSupported`` 属性的系统上（参见 `um-host-native-atomics`_），包括启用了 Linux HMM 的系统，不支持对文件支持的内存进行原子访问。
+请注意，在不具备 ``hostNativeAtomicSupported`` 属性的系统上（见 :ref:`um-host-native-atomics` ），包括启用了 Linux HMM 的系统，均不支持对基于文件的内存进行原子访问。
 
 .. _um-ipc:
 
@@ -213,175 +225,239 @@ Linux HMM 需要 Linux 内核版本 6.1.24+、6.2.11+ 或 6.3+，计算能力 7.
 
 .. note::
 
-   目前，使用 IPC 与统一内存可能会有显著的性能影响。
+   就目前而言，在统一内存中使用 IPC（进程间通信）可能会对性能产生显著影响。
 
-许多应用程序更喜欢为每个 GPU 管理一个进程，但仍需要使用统一内存（例如用于超额订阅），并从多个 GPU 访问它。
+许多应用程序倾向于为每个进程分配一个 GPU，但仍然需要使用统一内存（例如为了实现显存超额订阅），并且需要从多个 GPU 访问该内存。
 
-CUDA IPC（参见 :doc:`15-inter-process-communication`）不支持托管内存：此类内存的句柄不能通过本节讨论的任何机制共享。在具有完整 CUDA 统一内存支持的系统上，系统分配的内存支持 IPC。一旦与其他进程共享了对系统分配内存的访问，就适用相同的编程模型，类似于 `um-file-backed`_。
+CUDA IPC（见 :ref:`interprocess-communication-details` ）不支持托管内存（managed memory），本节中讨论的任何机制都不能用于共享此类内存句柄。
+但在支持完整 CUDA 统一内存的系统上，系统分配的内存是支持 IPC 的。
+一旦将系统分配内存的访问权限与其他进程共享，其适用的编程模型将与基于文件的统一内存（File-backed Unified Memory）类似。
 
-有关在 Linux 下创建 IPC 支持的系统分配内存的各种方法的更多信息，请参阅以下参考资料：
+有关在 Linux 下创建支持 IPC 的系统分配内存的各种方法，请参阅以下参考资料：
 
 - `mmap with MAP_SHARED <https://man7.org/linux/man-pages/man2/mmap.2.html>`_
 - `POSIX IPC APIs <https://pubs.opengroup.org/onlinepubs/007904875/functions/shm_open.html>`_
 - `Linux memfd_create <https://man7.org/linux/man-pages/man2/memfd_create.2.html>`_
 
-注意，使用此技术无法在不同主机及其设备之间共享内存。
+请注意，使用该技术无法在不同的主机及其设备之间共享内存。
 
 .. _um-performance-tuning:
 
 4.1.1.2. 性能调优
 ~~~~~~~~~~~~~~~~~
 
-为了使用统一内存实现良好的性能，重要的是：
+为了在使用统一内存时获得良好的性能，以下几点至关重要：
 
-- 理解分页在您的系统上如何工作，以及如何避免不必要的页错误
-- 理解各种机制，允许您将数据保持在访问处理器的本地
-- 考虑针对系统的内存传输粒度调整您的应用程序
+- 了解系统上的分页机制是如何工作的，如何避免不必要的缺页中断（page faults）；
+- 了解各种能够让数据保留在访问该数据的处理器本地的机制；
+- 考虑针对系统的内存传输粒度对应用程序进行调优。
 
-作为一般建议，性能提示（参见 `um-perf-hints`_）可能会提高性能，但不正确地使用它们可能会导致性能比默认行为更差。还需注意，任何提示在主机上都有相关的性能成本，因此有用的提示必须至少提高足够的性能来克服此成本。
+作为一般性建议，使用 :ref:`um-perf-hints` 可能会提升性能，但如果使用不当，反而会导致性能低于默认行为。
+此外请注意，任何提示都会给主机端带来一定的性能开销，因此，有用的提示至少必须能带来足够的性能提升，以抵消这部分开销。
 
 .. _um-page-size:
 
 4.1.1.2.1. 内存分页和页大小
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-为了更好地理解统一内存的性能影响，重要的是理解虚拟寻址、内存页和页大小。本子节尝试定义所有必要的术语并解释为什么分页对性能很重要。
+为了更好地理解统一内存对性能的影响，了解虚拟地址、内存页和页大小等概念至关重要。
+本小节旨在定义所有必要的术语，并解释为什么分页机制对性能如此重要。
 
-所有当前支持的统一内存系统都使用虚拟地址空间：这意味着应用程序使用的内存地址表示 *虚拟* 位置，该位置可能 *映射* 到内存实际驻留的 *物理* 位置。
+当前所有支持统一内存的系统都使用虚拟地址空间，这意味着应用程序使用的内存地址代表的是一个虚拟位置，该位置可能会被映射到内存实际驻留的物理位置。
 
-所有当前支持的处理器，包括 CPU 和 GPU，都使用内存 *分页*。由于所有系统都使用虚拟地址空间，有两种类型的内存页：
+此外，当前所有处理器（包括 CPU 和 GPU）都使用了内存 `分页机制` 。
+由于所有系统都使用虚拟地址空间，因此存在两种类型的内存页：
 
-- **虚拟页**：这表示每个进程由操作系统跟踪的固定大小连续虚拟内存块，可以 *映射* 到物理内存中。注意，虚拟页与 *映射* 相关联：例如，单个虚拟地址可能使用不同的页大小映射到物理内存中。
-- **物理页**：这表示处理器的主要内存管理单元 (MMU) 支持的固定大小连续内存块，虚拟页可以映射到其中。
+- **虚拟页** ：这代表由操作系统跟踪的、属于每个进程的固定大小的连续虚拟内存块，它可以被映射到物理内存中。
+  请注意，虚拟页是与 *映射关系* 绑定在一起的。例如，同一个虚拟地址可以使用不同的页大小来映射到物理内存。
 
-目前，所有 x86_64 CPU 使用 4KiB 的默认物理页大小。Arm CPU 支持多种物理页大小——4KiB、16KiB、32KiB 和 64KiB——具体取决于确切的 CPU。最后，NVIDIA GPU 支持多种物理页大小，但更喜欢 2MiB 或更大的物理页。注意，这些大小可能会在未来的硬件中发生变化。
+- **物理页** ：这代表处理器的内存管理单元（MMU）所支持的固定大小的连续内存块，虚拟页可以被映射到其中。
 
-虚拟页的默认页大小通常对应于物理页大小，但应用程序可以使用不同的页大小，只要它们得到操作系统和硬件的支持。通常，支持的虚拟页大小必须是 2 的幂且是物理页大小的倍数。
+目前，所有 x86_64 架构的 CPU 默认使用的物理页大小为 4KiB。
+Arm 架构的 CPU 则根据具体型号的不同，支持多种物理页大小——包括 4KiB、16KiB、32KiB 和 64KiB。
+最后，NVIDIA GPU 同样支持多种物理页大小，但更倾向于使用 2MiB 或更大的物理页。
+请注意，这些规格在未来的硬件中可能会有所改变。
 
-跟踪虚拟页到物理页映射的逻辑实体将被称为 *页表*，给定虚拟大小的给定虚拟页到物理页的每个映射称为 *页表项 (PTE)*。所有支持的处理器都为页表提供特定的缓存，以加速虚拟地址到物理地址的转换。这些缓存称为 *转换后备缓冲区 (TLB)*。
+虚拟页的默认页大小通常与物理页大小相对应，但只要操作系统和硬件支持，应用程序也可以使用不同的页大小。
+通常情况下，受支持的虚拟页大小必须是 2 的幂次方，并且是物理页大小的整数倍。
+
+用于跟踪虚拟页到物理页映射关系的逻辑实体被称为页表（page table），而将具有特定虚拟大小的给定虚拟页映射到物理页的具体记录，则称为页表项（Page Table Entry, PTE）。
+所有受支持的处理器都为页表提供了专用的缓存，以加速虚拟地址到物理地址的转换过程。
+这些缓存被称为转换后备缓冲器（Translation Lookaside Buffers, TLB）。
 
 性能调优有两个重要方面：
 
 - 虚拟页大小的选择
-- 系统是否提供 CPU 和 GPU 使用的组合页表，还是每个 CPU 和 GPU 单独的页表
+- CPU 和 GPU 使用的统一页表，还是为每个 CPU 和 GPU 分别提供独立的页表。
 
 .. _um-choosing-page-size:
 
 4.1.1.2.1.1. 选择合适的页大小
 """""""""""""""""""""""""""""
 
-一般来说，小页大小导致更少的（虚拟）内存碎片但更多的 TLB 未命中，而大页大小导致更多的内存碎片但更少的 TLB 未命中。此外，内存迁移通常在大页大小下比小页大小更昂贵，因为我们通常迁移完整的内存页。这可能导致使用大页大小的应用程序出现更大的延迟峰值。另见下一节有关页错误的更多详细信息。
+通常来说，较小的页大小（Page Size）会导致较少的（虚拟）内存碎片，但会增加 TLB 未命中（TLB misses）的次数；
+而较大的页大小则会导致更多的内存碎片，但能减少 TLB 未命中。
+此外，由于系统通常以完整的内存页为单位进行迁移，因此与较小的页相比，使用较大页进行内存迁移的成本通常更高。
+这可能会导致使用大页的应用程序出现更明显的延迟尖峰（latency spikes）。
+有关缺页中断（page faults）的更多详细信息，请参阅下一节。
 
-性能调优的一个重要方面是，GPU 上的 TLB 未命中通常比 CPU 上昂贵得多。这意味着如果 GPU 线程频繁访问使用足够小页大小映射的统一内存的随机位置，与使用足够大页大小映射的统一内存的相同访问相比，它可能会明显更慢。虽然类似的效果可能发生在 CPU 线程随机访问使用小页大小映射的大内存区域时，但 slowdown 不太明显，这意味着应用程序可能希望用更少的内存碎片来权衡这种 slowdown。
+在性能调优中，一个非常重要的方面是：与 CPU 相比，GPU 上的 TLB 未命中带来的性能惩罚通常要大得多。
+这意味着，如果 GPU 线程频繁地随机访问使用较小页大小映射的统一内存，其速度可能会明显慢于访问使用较大页大小映射的统一内存。
+虽然 CPU 线程随机访问使用小页映射的大片内存区域时也会出现类似的性能下降，但其影响相对不那么显著。
+因此，应用程序可能需要在承受这种 `性能下降` 与减少 `内存碎片化` 之间进行权衡。
 
-注意，一般来说，应用程序不应该针对给定处理器的物理页大小调整其性能，因为物理页大小会根据硬件而变化。上述建议仅适用于虚拟页大小。
+需要注意的是，应用程序通常不应根据特定处理器的物理页大小来调整性能，因为物理页大小可能会随着硬件的更迭而发生改变。
+上述建议仅适用于虚拟页大小。
+
 
 .. _um-hw-coherency:
 
 4.1.1.2.1.2. CPU 和 GPU 页表：硬件一致性与软件一致性
 """""""""""""""""""""""""""""""""""""""""""""""""""""
 
-硬件一致性系统（如 NVIDIA Grace Hopper）为 CPU 和 GPU 提供逻辑上组合的页表。这很重要，因为为了从 GPU 访问系统分配的内存，GPU 使用 CPU 为请求的内存创建的任何页表项。如果该页表项使用 CPU 的默认页大小 4KiB 或 64KiB，对大虚拟内存区域的访问将导致显著的 TLB 未命中，从而显著 slowdown。
+像 NVIDIA Grace Hopper 这样的硬件一致性（Hardware-coherent）系统，为 CPU 和 GPU 提供了逻辑上统一的页表。
+这一点非常重要，因为当 GPU 需要访问由系统分配的内存时，它必须使用 CPU 为该内存创建的页表项（PTE）。
+如果该页表项使用的是 CPU 默认的 4KiB 或 64KiB 页大小，那么在访问大段虚拟内存区域时，将会导致严重的 TLB 未命中，从而引发显著的性能下降。
 
-另一方面，在 CPU 和 GPU 各有自己逻辑页表的软件一致性系统上，应考虑不同的性能调优方面：为了保证一致性，这些系统通常在处理器访问映射到不同处理器物理内存的内存地址时使用 *页错误*。这样的页错误意味着：
+另一方面，在 CPU 和 GPU 各自拥有独立逻辑页表的软件一致性（software-coherent）系统中，需要考虑不同的性能调优策略：
+为了保证数据一致性，当一个处理器访问映射到另一个处理器物理内存中的地址时，这些系统通常会触发缺页中断（page fault）。
+这种缺页中断意味着：
 
-- 需要确保当前拥有处理器（物理页当前驻留的位置）不能再访问此页，通过删除页表项或更新它。
-- 需要确保请求访问的处理器可以访问此页，通过创建新页表项或更新现有项，使其变为有效/活动。
-- 支持此虚拟页的物理页必须移动/迁移到请求访问的处理器：这可能是一个昂贵的操作，工作量与页大小成正比。
+- 需确保当前持有该物理页的处理器（即该物理页当前所在的处理器）无法再访问此页面，具体可通过删除或更新页表项实现。
+- 需确保发起访问请求的处理器能够访问该页面，可通过新建页表项或更新已有页表项使其转为有效 / 启用状态来实现。
+- 支撑该虚拟页的物理页必须被移动（或迁移）到请求访问的处理器上：这是一项开销较大的操作，并且所需的工作量与页大小成正比。
 
-总体而言，与软件一致性系统相比，硬件一致性系统在 CPU 和 GPU 线程频繁并发访问同一内存页的情况下提供显著的性能优势：
+总体而言，在 CPU 和 GPU 线程频繁并发访问同一内存页的情况下，硬件一致性系统相比软件一致性系统能提供显著的性能优势：
 
-- **更少的页错误**：这些系统不需要使用页错误来模拟一致性或迁移内存
-- **更少的争用**：这些系统在缓存行粒度上是一致的，而不是页大小粒度，也就是说，当多个处理器在缓存行内有争用时，只交换缓存行，这比最小的页大小小得多，并且当不同处理器访问页内的不同缓存行时，没有争用
+- 更少的缺页中断，这些系统不需要利用缺页中断来模拟数据一致性或迁移内存。
+- 竞争更少，这类系统以 `缓存行` 为粒度维护一致性，而非以页面为粒度。
+  也就是说，当多个处理器对同一缓存行产生访问竞争时，仅需传输该缓存行 —— 其尺寸远小于最小页面；而当不同处理器访问同一页面内的不同缓存行时，不会产生竞争。
 
 这影响以下场景的性能：
 
-- 来自 CPU 和 GPU 并发地对同一地址进行原子更新
-- 从 CPU 线程向 GPU 线程发出信号，反之亦然
+- CPU 和 GPU 同时对同一地址进行原子更新
+- 从 CPU 线程向 GPU 线程发送信号，反之亦然。
+
+.. _um-mixed-coherency:
+
+4.1.1.2.1.3. 混合硬件和软件一致性
+"""""""""""""""""""""""""""""""""""
+
+部分具备硬件一致性的系统（例如 NVIDIA DGX Station）也支持安装独立的非一致性的 GPU 硬件。
+在这种情况下，硬件一致性 GPU 发起的内存访问将继续采用 :ref:`um-hw-coherency` 中描述的基于硬件的一致性机制；
+而独立 GPU 发起的内存访问则将采用基于软件的一致性机制。
+
+两类 GPU 可共用统一地址空间。受访问端 GPU 类型影响，系统性能与内存迁移表现会存在差异。
+具体来说，软件一致性 GPU 发起的访问会产生更多缺页中断与内存迁移；而硬件一致性 GPU 的缺页中断更少，且会在可行情况下启用远程映射。
+
+为实现最优性能，应尽量减少两类 GPU 间的数据共享，或通过显式拷贝完成数据交互。
+也可调用 ``cudaMemAdviseSetPreferredLocation`` 等接口，将高频共享数据固定存放于 CPU 内存或硬件一致性 GPU 内存中。
+这是因为默认状态下，访问软件一致性内存会触发缺页与数据迁移。
+
+在混合一致性系统中， ``cudaHostRegister`` 以及其他主机内存访问接口针对软件一致性 GPU 的行为会有所不同。
+该类系统中的软件一致性 GPU 不再使用锁页映射（pinned mappings），而是采用 CPU 页表软件镜像机制。
+这会使得部分 GPU 访问操作触发缺页中断，这类情况在非混合一致性系统中不会出现；不过此类缺页中断并不常见，一般仅在内存资源吃紧时才会发生。
 
 .. _um-host-direct-access:
 
 4.1.1.2.2. 从主机直接访问统一内存
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-某些设备具有硬件支持，用于主机对 GPU 驻留统一内存的相干读取、存储和原子访问。这些设备的 ``cudaDevAttrDirectManagedMemAccessFromHost`` 属性设置为 1。注意，所有硬件一致性系统都为 NVLink 连接的设备设置此属性。在这些系统上，主机无需页错误和数据迁移即可直接访问 GPU 驻留内存。注意，使用 CUDA 托管内存时，需要使用位置类型 ``cudaMemLocationTypeHost`` 的 ``cudaMemAdviseSetAccessedBy`` 提示来启用此直接访问而无需页错误，参见下面的示例。
+部分设备支持主机直接对 GPU 端驻留的统一内存执行一致性读、写及原子访问操作。
+这类设备的属性 ``cudaDevAttrDirectManagedMemAccessFromHost`` 会被置为 1。
+需注意：所有搭载硬件一致性、且通过 NVLink 互联的设备，该属性均默认启用。
+在此类系统中，主机可直接访问 GPU 驻留内存，全程不会产生缺页中断与数据迁移。
+另外，使用 CUDA 托管内存时，若想实现无缺页的直接访问，必须使用位置类型 ``cudaMemLocationTypeHost`` 为 ``cudaMemAdviseSetAccessedBy`` 的访问提示，具体示例见下文。
 
-.. dropdown:: 系统分配器
 
-   .. code-block:: c++
+.. tab-set::
 
-      __global__ void write(int *ret, int a, int b) {
-        ret[threadIdx.x] = a + b + threadIdx.x;
-      }
+   .. tab-item:: 系统分配器
 
-      __global__ void append(int *ret, int a, int b) {
-        ret[threadIdx.x] += a + b + threadIdx.x;
-      }
+      .. code-block:: c++
 
-      void test_malloc() {
-        int *ret = (int*)malloc(1000 * sizeof(int));
-        // for shared page table systems, the following hint is not necesary
-        cudaMemLocation location = {.type = cudaMemLocationTypeHost};
-        cudaMemAdvise(ret, 1000 * sizeof(int), cudaMemAdviseSetAccessedBy, location);
+         __global__ void write(int *ret, int a, int b) {
+           ret[threadIdx.x] = a + b + threadIdx.x;
+         }
 
-        write<<< 1, 1000 >>>(ret, 10, 100);            // pages populated in GPU memory
-        cudaDeviceSynchronize();
-        for(int i = 0; i < 1000; i++)
-            printf("%d: A+B = %d\n", i, ret[i]);        // directManagedMemAccessFromHost=1: CPU accesses GPU memory directly without migrations
-                                                       // directManagedMemAccessFromHost=0: CPU faults and triggers device-to-host migrations
-        append<<< 1, 1000 >>>(ret, 10, 100);            // directManagedMemAccessFromHost=1: GPU accesses GPU memory without migrations
-        cudaDeviceSynchronize();                        // directManagedMemAccessFromHost=0: GPU faults and triggers host-to-device migrations
-        free(ret);
-      }
+         __global__ void append(int *ret, int a, int b) {
+           ret[threadIdx.x] += a + b + threadIdx.x;
+         }
 
-.. dropdown:: 托管
+         void test_malloc() {
+           int *ret = (int*)malloc(1000 * sizeof(int));
+           // for shared page table systems, the following hint is not necesary
+           cudaMemLocation location = {.type = cudaMemLocationTypeHost};
+           cudaMemAdvise(ret, 1000 * sizeof(int), cudaMemAdviseSetAccessedBy, location);
 
-   .. code-block:: c++
+           write<<< 1, 1000 >>>(ret, 10, 100);  // pages populated in GPU memory
+           cudaDeviceSynchronize();
+           for(int i = 0; i < 1000; i++)
+               printf("%d: A+B = %d\n", i, ret[i]);  // directManagedMemAccessFromHost=1: CPU accesses GPU memory directly without migrations
+                                                     // directManagedMemAccessFromHost=0: CPU faults and triggers device-to-host migrations
+           append<<< 1, 1000 >>>(ret, 10, 100);  // directManagedMemAccessFromHost=1: GPU accesses GPU memory without migrations
+           cudaDeviceSynchronize();  // directManagedMemAccessFromHost=0: GPU faults and triggers host-to-device migrations
+           free(ret);
+         }
 
-      __global__ void write(int *ret, int a, int b) {
-        ret[threadIdx.x] = a + b + threadIdx.x;
-      }
+   .. tab-item:: 托管
 
-      __global__ void append(int *ret, int a, int b) {
-        ret[threadIdx.x] += a + b + threadIdx.x;
-      }
+      .. code-block:: c++
 
-      void test_managed() {
-        int *ret;
-        cudaMallocManaged(&ret, 1000 * sizeof(int));
-        cudaMemLocation location = {.type = cudaMemLocationTypeHost};
-        cudaMemAdvise(ret, 1000 * sizeof(int), cudaMemAdviseSetAccessedBy, location);  // set direct access hint
+         __global__ void write(int *ret, int a, int b) {
+           ret[threadIdx.x] = a + b + threadIdx.x;
+         }
 
-        write<<< 1, 1000 >>>(ret, 10, 100);            // pages populated in GPU memory
-        cudaDeviceSynchronize();
-        for(int i = 0; i < 1000; i++)
-            printf("%d: A+B = %d\n", i, ret[i]);        // directManagedMemAccessFromHost=1: CPU accesses GPU memory directly without migrations
-                                                       // directManagedMemAccessFromHost=0: CPU faults and triggers device-to-host migrations
-        append<<< 1, 1000 >>>(ret, 10, 100);            // directManagedMemAccessFromHost=1: GPU accesses GPU memory without migrations
-        cudaDeviceSynchronize();                        // directManagedMemAccessFromHost=0: GPU faults and triggers host-to-device migrations
-        cudaFree(ret);
-      }
+         __global__ void append(int *ret, int a, int b) {
+           ret[threadIdx.x] += a + b + threadIdx.x;
+         }
 
-在 ``write`` 核函数完成后， ``ret`` 将在 GPU 内存中创建和初始化。接下来，CPU 将访问 ``ret`` ，然后 ``append`` 核函数使用相同的 ``ret`` 内存。此代码将根据系统架构和硬件一致性支持显示不同的行为：
+         void test_managed() {
+           int *ret;
+           cudaMallocManaged(&ret, 1000 * sizeof(int));
+           cudaMemLocation location = {.type = cudaMemLocationTypeHost};
+           cudaMemAdvise(ret, 1000 * sizeof(int), cudaMemAdviseSetAccessedBy, location);  // set direct access hint
+ 
+           write<<< 1, 1000 >>>(ret, 10, 100);  // pages populated in GPU memory
+           cudaDeviceSynchronize();
+           for(int i = 0; i < 1000; i++)
+               printf("%d: A+B = %d\n", i, ret[i]);  // directManagedMemAccessFromHost=1: CPU accesses GPU memory directly without migrations
+                                                     // directManagedMemAccessFromHost=0: CPU faults and triggers device-to-host migrations
+           append<<< 1, 1000 >>>(ret, 10, 100);  // directManagedMemAccessFromHost=1: GPU accesses GPU memory without migrations
+           cudaDeviceSynchronize();  // directManagedMemAccessFromHost=0: GPU faults and triggers host-to-device migrations
+           cudaFree(ret);
+         }
 
-- 在 ``directManagedMemAccessFromHost=1`` 的系统上：对托管缓冲区的 CPU 访问不会触发任何迁移；数据将保留在 GPU 内存中，任何后续的 GPU 核函数都可以继续直接访问它，而不会导致错误或迁移
-- 在 ``directManagedMemAccessFromHost=0`` 的系统上：对托管缓冲区的 CPU 访问将页错误并启动数据迁移；任何尝试首次访问相同数据的 GPU 核函数将页错误并将页迁移回 GPU 内存
+在 ``write`` 核函数完成后， ``ret`` 将在 GPU 内存中创建和初始化。
+接下来，CPU 将访问 ``ret`` ，然后 ``append`` 核函数使用相同的 ``ret`` 内存。
+这段代码根据系统架构和硬件一致性支持显示出不同的行为：
+
+- 在 ``directManagedMemAccessFromHost=1`` 的系统上：对托管缓冲区的 CPU 访问不会触发任何迁移；
+  数据将保留在 GPU 内存中，任何后续的 GPU 核函数都可以继续直接访问它，而不会导致错误或迁移
+- 在 ``directManagedMemAccessFromHost=0`` 的系统上：对托管缓冲区的 CPU 访问将页错误并启动数据迁移；
+  任何尝试首次访问相同数据的 GPU 核函数将页错误并将页迁移回 GPU 内存
 
 .. _um-host-native-atomics:
 
 4.1.1.2.3. 主机原生原子操作
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-某些设备，包括硬件一致性系统的 NVLink 连接设备，支持对 CPU 驻留内存的硬件加速原子访问。这意味着对主机内存的原子访问不必用页错误模拟。对于这些设备， ``cudaDevAttrHostNativeAtomicSupported`` 属性设置为 1。
+部分设备（采用 NVLink 互联的硬件一致性系统设备也包含在内）支持硬件原子访问驻留在 CPU 端的内存。
+这意味着，对主机内存执行原子操作时，无需借助缺页异常来软件模拟实现。
+这类设备对应的属性 ``cudaDevAttrHostNativeAtomicSupported`` 会被置为 1。
+
 
 .. _um-atomic-access-sync:
 
 4.1.1.2.4. 原子访问和同步原语
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-CUDA 统一内存支持主机和设备线程可用的所有原子操作，使所有线程能够通过并发访问同一共享内存位置进行协作。`libcu++ <https://nvidia.github.io/cccl/libcudacxx/extended_api/synchronization_primitives.html>`_ 库提供了许多针对主机和设备线程之间并发使用调整的异构同步原语，包括 ``cuda::atomic`` 、 ``cuda::atomic_ref`` 、 ``cuda::barrier`` 、 ``cuda::semaphore`` 等。
+CUDA 统一内存支持主机线程与设备线程可用的全部原子操作，让所有线程能够通过并发访问同一共享内存地址实现协同工作。
+`libcu++ <https://nvidia.github.io/cccl/libcudacxx/extended_api/synchronization_primitives.html>`_  库提供了大量针对主机与设备线程并发交互优化的异构同步原语，
+包括 ``cuda::atomic`` 、  ``cuda::atomic_ref`` 、 ``cuda::barrier`` 、 ``cuda::semaphore`` 等。
 
-在软件一致性系统上，不支持从设备对文件支持的主机内存进行原子访问。以下示例代码在硬件一致性系统上有效，但在其他系统上表现出未定义的行为：
+在软件一致性系统中，设备端无法对基于文件映射的主机内存执行原子访问。
+下方示例代码在硬件一致性系统中可正常运行，但在其他系统上会产生未定义行为。
 
 .. code-block:: c++
 
@@ -394,6 +470,7 @@ CUDA 统一内存支持主机和设备线程可用的所有原子操作，使所
    #define ERR(msg, ...) { fprintf(stderr, msg, ##__VA_ARGS__); return EXIT_FAILURE; }
 
    __global__ void kernel(int* ptr) {
+     // atomic accesses from the device to file-backed host memory are not supported
      cuda::atomic_ref{*ptr}.store(2);
    }
 
@@ -419,34 +496,38 @@ CUDA 统一内存支持主机和设备线程可用的所有原子操作，使所
      return EXIT_SUCCESS;
    }
 
-在软件一致性系统上，对统一内存的原子访问可能会产生页错误，这可能导致显著的延迟。注意，对于这些系统上的 CPU 内存的所有 GPU 原子操作并非都是如此：`nvidia-smi -q | grep "Atomic Caps Outbound"` 列出的操作可能会避免页错误。
+在软件一致性系统中，对统一内存执行原子访问可能触发缺页异常，进而带来显著的访问延迟。
+需要注意：并非该类系统上所有 GPU 对主机内存的原子操作都会出现此问题；通过命令 ``nvidia-smi -q | grep "Atomic Caps Outbound"`` 查询到的受支持操作，可避免触发缺页。
 
-在硬件一致性系统上，主机和设备之间的原子操作不需要页错误，但仍可能因其他可能导致任何内存访问错误的原因而出错。
+在硬件一致性系统中，主机与设备间的原子访问不会因跨设备访问触发缺页异常，但仍可能因所有内存访问都会遇到的通用问题产生缺页。
+
 
 .. _um-memcpy-memset-behavior:
 
-4.1.1.2.5. Memcpy()/Memset() 与统一内存的行为
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+4.1.1.2.5. 统一内存下 memcpy () /memset () 的行为
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``cudaMemcpy*()`` 和 ``cudaMemset*()`` 接受任何统一内存指针作为参数。
+``cudaMemcpy*()`` 与 ``cudaMemset*()`` 系列接口，均支持传入任意统一内存指针作为参数。
 
-对于 ``cudaMemcpy*()`` ，指定为 ``cudaMemcpyKind`` 的方向是性能提示，如果任何参数是统一内存指针，可能会产生更高的性能影响。
+对于各类 ``cudaMemcpy*()`` 接口，由 ``cudaMemcpyKind`` 指定的数据传输方向仅作为性能提示；若入参中包含统一内存指针，该提示对性能的影响会更加明显。
 
 因此，建议遵循以下性能建议：
 
-- 当统一内存的物理位置已知时，使用准确的 ``cudaMemcpyKind`` 提示
-- 优先使用 ``cudaMemcpyDefault`` 而不是不准确的 ``cudaMemcpyKind`` 提示
-- 始终使用已填充（已初始化）的缓冲区：避免使用这些 API 初始化内存
-- 如果两个指针都指向系统分配的内存，避免使用 ``cudaMemcpy*()`` ：改为启动核函数或使用 CPU 内存复制算法（如 ``std::memcpy`` ）
+- 当已知统一内存的物理位置时，请使用准确的 ``cudaMemcpyKind`` 提示。
+- 如果无法提供准确的 ``cudaMemcpyKind`` 提示，请优先使用 ``cudaMemcpyDefault`` 。
+- 务必使用已填充（已初始化）的缓冲区，不要借助这类接口做内存初始化操作。
+- 当两个指针都指向系统分配的内存时，应避免使用 ``cudaMemcpy*()`` 函数：请改为启动核函数，或使用 CPU 内存拷贝算法（如 ``std::memcpy`` ）。
 
 .. _um-allocator-overview:
 
 4.1.1.2.6. 统一内存的内存分配器概述
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-对于具有完整 CUDA 统一内存支持的系统，可以使用各种不同的分配器来分配统一内存。下表显示了所选分配器及其各自功能的概述。注意，本节中的所有信息都可能在未来的 CUDA 版本中发生变化。
+对于支持完整 CUDA 统一内存的系统，可以使用各种不同的分配器（allocators）来分配统一内存。
+下表概述了部分分配器及其各自的功能特性。
+请注意，本节中的所有信息在未来的 CUDA 版本中可能会发生变化。”
 
-.. list-table:: 不同分配器的统一内存支持概述
+.. list-table:: 不同分配器对统一内存的支持概览
    :widths: 25 20 15 20 20
    :header-rows: 1
 
@@ -455,52 +536,88 @@ CUDA 统一内存支持主机和设备线程可用的所有原子操作，使所
      - 可访问自
      - 基于访问迁移 [\ [#f2]_ ]
      - 页大小 [\ [#f4]_ ] [\ [#f5]_ ]
-   * - ``malloc`` 、 ``new`` 、 ``mmap``
-     - 首次触摸/提示 [\ [#f1]_ ]
+   * - | ``malloc`` 
+       | ``new``
+       | ``mmap``
+     - 首次访问/提示 [\ [#f1]_ ]
      - CPU、GPU
      - 是 [\ [#f3]_ ]
-     - 系统或大页大小 [\ [#f6]_ ]
+     - 系统或大页 [\ [#f6]_ ]
    * - ``cudaMallocManaged``
-     - 首次触摸/提示
+     - 首次访问/提示
      - CPU、GPU
      - 是
-     - CPU 驻留：系统页大小 GPU 驻留：2MB
+     - | CPU 驻留：
+       | 系统页大小
+       |
+       | GPU 驻留：
+       | 2MB
    * - ``cudaMalloc``
      - GPU
      - GPU
      - 否
-     - GPU 页大小：2MB
-   * - ``cudaMallocHost`` 、 ``cudaHostAlloc`` 、 ``cudaHostRegister``
+     - | GPU 页大小：
+       | 2MB
+   * - | ``cudaMallocHost``
+       | ``cudaHostAlloc`` 
+       | ``cudaHostRegister``
      - CPU
      - CPU、GPU
      - 否
-     - CPU 映射：系统页大小 GPU 映射：2MB
-   * - 内存池，位置类型主机： ``cuMemCreate`` 、 ``cudaMemPoolCreate``
+     - | CPU 映射：
+       | 系统页大小
+       |
+       | GPU 映射：
+       | 2MB
+   * - | 内存池，主机
+       | ``cuMemCreate``
+       | ``cudaMemPoolCreate``
      - CPU
      - CPU、GPU
      - 否
-     - CPU 映射：系统页大小 GPU 映射：2MB
-   * - 内存池，位置类型设备： ``cuMemCreate`` 、 ``cudaMemPoolCreate`` 、 ``cudaMallocAsync``
+     - | CPU 映射：
+       | 系统页大小
+       | 
+       | GPU 映射：
+       | 2MB
+   * - | 内存池，设备
+       | ``cuMemCreate``
+       | ``cudaMemPoolCreate``
+       | ``cudaMallocAsync``
      - GPU
      - GPU
      - 否
      - 2MB
 
-.. [#f1] 对于 ``mmap``，文件支持的内存默认放置在 CPU 上，除非通过 ``cudaMemAdviseSetPreferredLocation``（或 ``mbind``，见下面的项目符号）另行指定。
-.. [#f2] 此功能可以使用 ``cudaMemAdvise`` 覆盖。即使禁用了基于访问的迁移，如果支持的内存空间已满，内存也可能会迁移。
-.. [#f3] 文件支持的内存不会根据访问迁移。
-.. [#f4] 默认系统页大小在大多数系统上为 4KiB 或 64KiB，除非明确指定大页大小（例如，使用 ``mmap`` ``MAP_HUGETLB`` / ``MAP_HUGE_SHIFT``）。在这种情况下，支持在系统上配置的任何大页大小。
-.. [#f5] GPU 驻留内存的页大小可能会在未来的 CUDA 版本中演变。
-.. [#f6] 目前，在将内存迁移到 GPU 或通过首次触摸将其放置在 GPU 上时，可能不会保持大页大小。
+.. [#f1] 对于 ``mmap`` ，除非通过 ``cudaMemAdviseSetPreferredLocation`` （或 ``mbind`` ，见下方要点）另行指定，否则基于文件的内存默认会被放置在 CPU 端。
+.. [#f2] 此功能可以通过 ``cudaMemAdvise`` 进行覆盖。即使禁用了基于访问的迁移，如果底层内存空间已满，内存仍可能会发生迁移。
+.. [#f3] 基于文件的内存不会根据访问迁移。
+.. [#f4] 在大多数系统上，默认的系统页大小为 4KiB 或 64KiB，除非显式指定了大页大小（例如，使用 ``mmap`` ``MAP_HUGETLB`` / ``MAP_HUGE_SHIFT``）。
+         在这种情况下，支持在系统上配置的任何大页大小。
+.. [#f5] 驻留在 GPU 端的内存所使用的页大小，可能会在后续 CUDA 版本中发生调整。
+.. [#f6] 目前，当内存迁移至 GPU、或是因 GPU 端首次访问完成内存驻留时，原有的大页配置可能无法保留。
 
-表 `um-allocator-table`_ 显示了几种可用于分配可同时从多个处理器（包括主机和设备）访问的数据的分配器的语义差异。有关 ``cudaMemPoolCreate`` 的更多详细信息，请参阅 `内存池 <stream-ordered-memory-allocation.html#stream-ordered-memory-pools>`_ 部分，有关 ``cuMemCreate`` 的更多详细信息，请参阅 `虚拟内存管理 <virtual-memory-management.html#virtual-memory-management>`_ 部分。
+上面的表格展示了多种分配器在语义上的差异。这些分配器可用于分配能同时被多个处理器（包括主机和设备）访问的数据。
+有关 ``cudaMemPoolCreate`` 的更多详细信息，请参阅 :ref:`soma-memory-pools` 章节；
+有关 ``cuMemCreate`` 的更多详细信息，请参阅 :ref:`virtual-memory-management-details` 章节。
 
-在硬件一致性系统上，设备内存作为 NUMA 域暴露给系统，可以使用特殊的分配器（如 ``numa_alloc_on_node`` ）将内存固定到给定的 NUMA 节点（主机或设备）。此内存可从主机和设备访问，且不迁移。类似地， ``mbind`` 可用于将内存固定到给定的 NUMA 节点，并可使文件支持的内存首次访问之前放置在给定的 NUMA 节点上。
+在硬件一致性系统中，设备内存会作为一个 NUMA 域暴露给操作系统。
+此时，可以使用 ``numa_alloc_on_node`` 等专用分配器将内存固定到指定的 NUMA 节点（无论是主机节点还是设备节点）。
+这部分内存可同时被主机和设备访问，且不会发生迁移。
+类似地，也可以使用 ``mbind`` 将内存固定到指定的一个或多个 NUMA 节点，它还能使基于文件的内存在首次被访问之前，就提前放置在指定的 NUMA 节点上。
 
-以下适用于共享内存的分配器：
+以下规则适用于共享内存相关的各类内存分配器：
 
-- 系统分配器（如 ``mmap`` ）允许使用 ``MAP_SHARED`` 标志在进程之间共享内存。这在 CUDA 中受支持，可用于在同一主机连接的不同设备之间共享内存。但是，目前不支持在多个主机以及多个设备之间共享内存。有关详细信息，请参阅 `um-ipc`_。
-- 对于在多个主机上通过网络访问统一内存或其他 CUDA 内存，请咨询所用通信库的文档，例如 `NCCL <https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/index.html>`_、`NVSHMEM <https://docs.nvidia.com/nvshmem/api/index.html>`_、`OpenMPI <https://www.open-mpi.org/faq/?category=runcuda>`_、`UCX <https://docs.mellanox.com/category/hpcx>`_ 等。
+- 系统分配器（如 ``mmap`` ）允许使用 ``MAP_SHARED`` 标志在进程之间共享内存。
+  CUDA 支持这一特性，可用于在同一主机连接的不同设备之间共享内存。
+  但是，目前不支持通过这种方式在多台主机之间或多台设备之间共享内存。有关详细信息，请参阅 :ref:`um-ipc` 。
+
+- 如果需要在多台主机之间通过网络访问统一内存或其他 CUDA 内存，请查阅所使用的通信库的文档，例如：
+  `NCCL <https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/index.html>`_ 、
+  `NVSHMEM <https://docs.nvidia.com/nvshmem/api/index.html>`_ 、
+  `OpenMPI <https://www.open-mpi.org/faq/?category=runcuda>`_ 、
+  `UCX <https://docs.mellanox.com/category/hpcx>`_ 
+  等。
 
 .. _um-access-counter-migration:
 
