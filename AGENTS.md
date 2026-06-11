@@ -162,8 +162,10 @@ release = '0.1'
 - **Spaces**: Add spaces between Chinese and English/numbers
 - **Example**: `CUDA 是 NVIDIA 开发的并行计算平台，支持 C++ 和 Python。`
 - **Translation**: Translate prose to Chinese but keep code in English
+- **Code comments**: Keep all comments inside code blocks (``.. code-block::``) in English. Do NOT translate comments in code to Chinese.
 - **Technical terms**: Keep original English terms for API names, function names
-- **Do not translate**: tile, kernel
+- **Do not translate**: tile
+- **kernel**: Translate CUDA kernel as "核函数" or keep as "kernel". Exception: "Linux kernel" stays as "Linux kernel".
 
 ## Naming Conventions
 

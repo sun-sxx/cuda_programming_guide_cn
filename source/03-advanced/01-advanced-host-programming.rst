@@ -146,7 +146,7 @@ kernel 也可以使用 ``__block_size__`` 注解，它在定义 kernel 时同时
 :ref:`cuda-streams` 介绍了 CUDA 流的基础知识。
 默认情况下，在给定 CUDA 流上提交的操作是串行化的：一个操作在前一个操作完成之前无法开始执行。
 唯一的例外是最近添加的 :ref:`programmatic-dependent-launch-details` 特性。
-拥有多个 CUDA 流是实现并发执行的一种方式；另一种方式是使用 :ref:`cuda-graphs-details`。
+拥有多个 CUDA 流是实现并发执行的一种方式；另一种方式是使用 :ref:`cuda-graphs`。
 这两种方法也可以结合使用。
 
 在特定情况下，不同 CUDA 流上提交的工作可能会并发执行，例如，如果没有事件依赖关系，没有隐式同步，有足够的资源等。
@@ -175,7 +175,7 @@ kernel 也可以使用 ``__block_size__`` 注解，它在定义 kernel 时同时
      - 等待特定流
      - 等待特定事件
      - 等待设备上的所有内容
-   * - 非阻塞（轮询）
+   * - 非阻塞-轮询
      - ``cudaStreamQuery()``
      - ``cudaEventQuery()``
      - N/A

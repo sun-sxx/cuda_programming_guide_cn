@@ -46,7 +46,7 @@ CUDA 中异步执行的核心 API 组件是 **CUDA 流（CUDA Streams）** 和 *
 在本节的其余部分，我们将解释如何使用这些元素来表达 CUDA 中的异步执行。
 
 一个相关主题是 **CUDA 图（CUDA Graphs）**，它允许预先定义异步操作图，然后可以以最小的开销重复执行。
-我们在 :ref:`async-execution-cuda-graphs` 中简要介绍 CUDA 图，更详细的讨论在 :ref:`cuda-graphs-details` 中。
+我们在 :ref:`async-execution-cuda-graphs` 中简要介绍 CUDA 图，更详细的讨论在 :ref:`cuda-graphs` 中。
 
 .. _cuda-streams:
 
