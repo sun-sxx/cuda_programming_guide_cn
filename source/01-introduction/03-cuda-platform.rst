@@ -87,6 +87,7 @@ CUDA 应用程序和库通常用 C++ 等高级语言编写。
 .. figure:: /_static/images/fatbin.png
    :alt: 可执行文件或库中的 Fatbin 容器可以包含多个 GPU 代码版本
    :width: 80%
+   :align: center
 
    可执行文件或库的二进制文件包含 CPU 二进制代码和 GPU 代码的 fatbin 容器。fatbin 可以同时包含 cubin GPU 二进制代码和 PTX 虚拟 ISA 代码。PTX 代码可以为未来目标进行 JIT 编译。
 

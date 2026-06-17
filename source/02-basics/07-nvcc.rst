@@ -95,6 +95,7 @@ GPU 编译器将 C/C++ 设备代码编译为 PTX 汇编代码。GPU 编译器会
 
 .. figure:: /_static/images/nvcc-flow.png
    :alt: nvcc 基本工作流程
+   :align: center
 
    nvcc 基本编译工作流程
 
@@ -102,6 +103,7 @@ GPU 编译器将 C/C++ 设备代码编译为 PTX 汇编代码。GPU 编译器会
 
 .. figure:: /_static/images/nvcc-flow-multi-archs.png
    :alt: nvcc 多架构工作流程
+   :align: center
 
    nvcc 具有多个 PTX 和 Cubin 架构的编译工作流程
 

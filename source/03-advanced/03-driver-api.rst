@@ -172,6 +172,7 @@ Runtime API 管理的那个主上下文（ 见 :ref:`intro-cpp-runtime-initializ
 .. _library-context-management:
 .. figure:: /_static/images/library-context-management.png
    :alt: 库 Context 管理
+   :align: center
 
    库 Context 管理
 

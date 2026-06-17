@@ -73,12 +73,13 @@ cuda_guide_cn/
 """""""""""""""""""""""""""""""""
 ```
 
-**Images** - All images from the original CUDA Programming Guide must be downloaded to `source/_static/images/` and referenced using absolute paths. **Never use remote URLs** (e.g., `https://docs.nvidia.com/...`) in `.. figure::` directives. The image filename should match the original documentation's filename. Example:
+**Images** - All images from the original CUDA Programming Guide must be downloaded to `source/_static/images/` and referenced using absolute paths. **Never use remote URLs** (e.g., `https://docs.nvidia.com/...`) in `.. figure::` directives. The image filename should match the original documentation's filename. **All figures must be centered** by adding `:align: center`. Example:
 
 ```rst
 .. figure:: /_static/images/gpu-cpu-system-diagram.png
    :alt: GPU 和 CPU 系统图
    :width: 80%
+   :align: center
 
    图 1 GPU 和 CPU 系统图
 ```

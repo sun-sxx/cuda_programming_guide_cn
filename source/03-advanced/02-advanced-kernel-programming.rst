@@ -127,6 +127,7 @@ Warp 同步代码假设同一 warp 中的线程在每条指令上都以锁步方
 .. figure:: /_static/images/warps-in-a-block.png
    :alt: 线程块被划分为 32 个线程的 warp
    :figwidth: 80%
+   :align: center
 
    线程块被划分为 32 个线程的 warp
 
