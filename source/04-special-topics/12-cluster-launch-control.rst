@@ -45,7 +45,7 @@
    :header-rows: 1
    :widths: auto
 
-   * - 
+   * -
      - **固定每个线程块的工作量**
      - **固定线程块数量**
      - **Cluster Launch Control**
@@ -166,15 +166,15 @@
   .. code-block:: cuda
      :linenos:
 
-     // 第一个请求：
+     // First request:
      ptx::clusterlaunchcontrol_try_cancel(&result0, &bar0);
 
-     // 第一个请求查询：
-     [同步 bar0 的代码放在这里。]
+     // First request query:
+     [Synchronize bar0 code here.]
      bool success0 = ptx::clusterlaunchcontrol_query_cancel_is_canceled(result0);
-     assert(!success0);  // 观察到失败；第二个取消将是无效的。
+     assert(!success0); // Observed failure; second cancellation will be invalid.
 
-     // 第二个请求 - 下一行是未定义行为：
+     // Second request - next line is Undefined Behavior:
      ptx::clusterlaunchcontrol_try_cancel(&result1, &bar1);
 
   **有效代码：**
@@ -182,16 +182,16 @@
   .. code-block:: cuda
      :linenos:
 
-     // 第一个请求：
+     // First request:
      ptx::clusterlaunchcontrol_try_cancel(&result0, &bar0);
 
-     // 第二个请求：
+     // Second request:
      ptx::clusterlaunchcontrol_try_cancel(&result1, &bar1);
 
-     // 第一个请求查询：
-     [同步 bar0 的代码放在这里。]
+     // First request query:
+     [Synchronize bar0 code here.]
      bool success0 = ptx::clusterlaunchcontrol_query_cancel_is_canceled(result0);
-     assert(!success0);  // 观察到失败；第二个取消是有效的。
+     assert(!success0); // Observed failure; second cancellation was valid.
 
 - 获取失败取消请求的线程块索引是未定义行为。
 
